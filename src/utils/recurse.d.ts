@@ -1,0 +1,1 @@
+export function recurseDown(source: any, fn: (node: any) => void): void;

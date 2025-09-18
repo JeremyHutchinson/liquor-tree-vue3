@@ -1,6 +1,7 @@
 # Vue 3 + Vite + TypeScript Upgrade Plan
 
 Goal
+
 - Migrate the library from Vue 2 + Rollup + JS to Vue 3 + Vite + TypeScript.
 - Adopt the Composition API with <script setup> across SFCs.
 - Convert the two mixins (src/mixins/TreeMixin.js, src/mixins/DndMixin.js) into composables.
@@ -9,10 +10,12 @@ Goal
 - Preserve the public API where reasonable; document intentional breaking changes.
 
 Non-goals (for this phase)
+
 - No feature additions beyond those required by the migration.
 - No redesign of component UI/UX.
 
 Phasing overview
+
 1) Toolchain and scaffolding
 2) Core library migration (types, events, composables)
 3) Component SFC migration (<script setup>)
@@ -24,6 +27,7 @@ Phasing overview
 ---
 
 Phase 1 — Toolchain and scaffolding
+
 - Node and package baseline
   - Require Node 18+.
   - Switch package manager commands to npm (retain compatibility with Windows pwsh).
@@ -46,17 +50,20 @@ Phase 1 — Toolchain and scaffolding
   - Remove Rollup from build scripts after migration completes (keep temporarily during transition if needed).
 
 Deliverables
+
 - vite.config.ts (library mode output to dist/).
 - tsconfig.json.
 - Updated package.json scripts and devDependencies.
 
 Acceptance criteria
+
 - vite build produces dist/liquor-tree.[esm|umd].js equivalents with Vue externalized.
 - type-check passes.
 
 ---
 
 Phase 2 — Core library migration (types, events, composables foundation)
+
 - Convert core classes to TypeScript
   - src/lib/Tree.js -> src/lib/Tree.ts
   - src/lib/Node.js -> src/lib/Node.ts
@@ -67,19 +74,22 @@ Phase 2 — Core library migration (types, events, composables foundation)
   - Tree exposes on/off/emit that proxy to the emitter.
   - Components subscribe and re-emit via defineEmits where appropriate (for v-model and node/tree events).
 - Public API considerations
-  - Maintain node:* and tree:* event semantics, but document that events are emitted from the component via emits rather than $emit on an injected vm.
+  - Maintain node:*and tree:* event semantics, but document that events are emitted from the component via emits rather than $emit on an injected vm.
   - Evaluate v-model changes: in Vue 3, prefer modelValue/update:modelValue. Provide mapping for legacy consumers if feasible.
 
 Deliverables
+
 - TypeScript class implementations with appropriate interfaces/types for Node state, options, and Tree parsing.
 - Internal event emitter integrated; no direct vm.$on/$emit in core classes.
 
 Acceptance criteria
+
 - TypeScript builds pass; unit tests for core classes (ported from existing Jest tests) pass under Vitest.
 
 ---
 
 Phase 3 — Convert mixins to composables and migrate SFCs to <script setup>
+
 - Mixins -> composables
   - src/mixins/TreeMixin.js -> src/composables/useTree.ts
     - Responsibilities: initialize Tree instance, wire keyboard navigation, model syncing (selected/checked), optional store integration, expose imperative methods (append, prepend, find, etc.).
@@ -101,15 +111,18 @@ Phase 3 — Convert mixins to composables and migrate SFCs to <script setup>
     - Port keyboard handling to Composition API.
 
 Deliverables
+
 - useTree.ts and useDnd.ts composables.
 - All components using <script setup lang="ts"> with typed props/emits.
 
 Acceptance criteria
+
 - Dev build runs; component renders with basic interactions (select/expand/check) functioning.
 
 ---
 
 Phase 4 — Demo upgrade (Storybook + Vite for Vue 3)
+
 - Replace docs/storybook (Storybook 5) with a Vue 3 + Vite builder setup (Storybook 8 or 7 with @storybook/vue3-vite).
 - Create .storybook/ configuration with vite builder.
 - Update stories to use Vue 3 patterns (CSF) and ensure they import the library build or local source via Vite alias.
@@ -120,15 +133,18 @@ Phase 4 — Demo upgrade (Storybook + Vite for Vue 3)
   - DnD examples.
 
 Deliverables
+
 - .storybook/ with Vue 3 + Vite config.
 - Updated stories under stories/ (moved from docs/storybook/stories).
 
 Acceptance criteria
+
 - Storybook starts with npm run storybook and renders all examples without console errors.
 
 ---
 
 Phase 5 — Testing migration and expansion
+
 - Migrate test runner
   - Replace Jest with Vitest; configure jsdom environment.
   - Update @vue/test-utils to v2 for Vue 3.
@@ -144,15 +160,18 @@ Phase 5 — Testing migration and expansion
   - 90%+ statements/branches for core logic.
 
 Deliverables
+
 - Vitest config (within vite config or separate), updated tests in TypeScript.
 - npm scripts: test, test:watch, coverage.
 
 Acceptance criteria
+
 - test and test:watch pass locally; coverage meets threshold.
 
 ---
 
 Phase 6 — Cleanup and package polish
+
 - Remove Rollup config and @vue/cli-service dependencies after parity is confirmed.
 - Update package.json fields
   - main/module/types fields for library outputs.
@@ -165,14 +184,17 @@ Phase 6 — Cleanup and package polish
   - vue-tsc passes for SFCs and TS files.
 
 Deliverables
+
 - Finalized package.json and removal of obsolete files (rollup.config.js, jest.config.js, docs/storybook/* if fully replaced).
 
 Acceptance criteria
+
 - clean install/build/test pass; library can be consumed in a fresh Vue 3 + Vite sandbox.
 
 ---
 
 Phase 7 — Release prep
+
 - Semver decision
   - Publish under new major (e.g., 1.0.0 or next major) due to breaking changes (Vue 3, event API).
 - Migration guide (CHANGELOG/UPGRADE.md)
@@ -182,6 +204,7 @@ Phase 7 — Release prep
 ---
 
 Key design decisions and notes
+
 - Eventing: Replace reliance on vm.$on/$emit in Tree with an internal emitter (mitt). Components use defineEmits to bridge Tree events to consumers. This isolates core logic from the component instance API.
 - v-model: Prefer modelValue/update:modelValue; expose selected/checked model as needed. Consider a single model for checkbox mode mirroring the previous API, but adopt Vue 3 conventions.
 - Composables naming: useTree and useDnd; colocate under src/composables/.
@@ -190,11 +213,13 @@ Key design decisions and notes
 - DnD: Continue using mouse listeners with composedPath; verify compatibility across browsers; keep helpers for drop classes.
 
 Breaking changes to communicate
+
 - Vue 3 only.
 - Removal of $on/$off usage; consumers should rely on component-emitted events and props.
 - v-model event name differences (modelValue/update:modelValue) if consumers previously bound to input.
 
 Work breakdown and PR plan
+
 - PR1: Tooling scaffolding (Vite + TS), parallel to existing build; no functional changes.
 - PR2: Core classes to TS + mitt; adapt minimal component glue (behind a compatibility layer) to keep stories/tests passing.
 - PR3: Mixins -> composables; TreeRoot/TreeNode to <script setup>.
@@ -204,6 +229,7 @@ Work breakdown and PR plan
 - PR7: Cleanup (remove Rollup/Jest), package polish, docs, and release prep.
 
 Command reference (pwsh-friendly)
+
 - Dev: npm run dev
 - Build: npm run build
 - Type check: npm run type-check
@@ -213,12 +239,14 @@ Command reference (pwsh-friendly)
 - Storybook: npm run storybook (after setup in Phase 4)
 
 Risk & mitigation
+
 - Event system divergence: Adopt mitt early (Phase 2) to decouple core from Vue instance; add adapter layer in components.
 - DnD regressions: Add focused tests for drop positions and class toggling; validate in Storybook.
 - Async loading differences: Mock fetch and timers in Vitest; ensure minFetchDelay logic persists.
 - Bundle format changes: Validate UMD global name and externals; verify tree-shaking in ESM.
 
 Acceptance criteria (overall)
+
 - All phases’ acceptance criteria met.
 - Demo (Storybook) covers core scenarios and works on Vue 3.
 - Comprehensive tests with high coverage; type and lint checks clean.
