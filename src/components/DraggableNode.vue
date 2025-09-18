@@ -7,20 +7,33 @@
   </div>
 </template>
 
-<script>
-  export default {
-    name: 'DragNode',
-    props: ['target'],
-    computed: {
-      style() {
-        if (undefined === this.target.top) {
-          return 'display: none'
-        }
+<script setup lang="ts">
+import { computed } from 'vue'
 
-        return `top: ${this.target.top}px; left: ${this.target.left}px`
-      }
-    }
+// Props
+interface Props {
+  target: {
+    top?: number
+    left?: number
+    node: any
   }
+}
+
+const props = defineProps<Props>()
+
+// Computed
+const style = computed(() => {
+  if (props.target.top === undefined) {
+    return 'display: none'
+  }
+
+  return `top: ${props.target.top}px; left: ${props.target.left}px`
+})
+
+// Define component name
+defineOptions({
+  name: 'DraggableNode'
+})
 </script>
 
 <style>

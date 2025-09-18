@@ -8,7 +8,7 @@
   >
     <div
       class="tree-content"
-      :style="[options.direction == 'ltr' ? {'padding-left': padding} : {'padding-right': padding}]"
+      :style="[options.direction === 'ltr' ? {'padding-left': padding} : {'padding-right': padding}]"
       @click.stop="select"
     >
       <i
@@ -29,7 +29,7 @@
         class="tree-anchor"
         tabindex="-1"
         @focus="onNodeFocus"
-        @dblclick="tree.$emit('node:dblclick', node)"
+        @dblclick="$emit('node:dblclick', node)"
       >
         <node-content :node="node" />
       </span>
@@ -40,179 +40,196 @@
         v-if="hasChildren() && node.states.expanded"
         class="tree-children"
       >
-        <node
+        <TreeNode
           v-for="child in visibleChildren"
           :key="child.id"
           :node="child"
           :options="options"
+          @node:clicked="(node) => emit('node:clicked', node)"
+          @node:dblclick="(node) => emit('node:dblclick', node)"
         />
       </ul>
     </transition>
   </li>
 </template>
 
-<script>
-  import NodeContent from './NodeContent.vue'
+<script setup lang="ts">
+import { computed, inject, ref, watch, onMounted } from 'vue'
+import type { Node as INode, TreeOptions } from '../types'
+import NodeContent from './NodeContent.vue'
 
-  const TreeNode = {
-    name: 'Node',
-    inject: ['tree'],
-    props: ['node', 'options'],
+// Props
+interface Props {
+  node: INode
+  options: TreeOptions
+}
 
-    components: {
-      NodeContent
-    },
+const props = defineProps<Props>()
 
-    watch: {
-      node() {
-        this.node.vm = this
-      }
-    },
+// Emits
+const emit = defineEmits<{
+  'node:dblclick': [node: INode]
+  'node:clicked': [node: INode]
+}>()
 
-    data() {
-      this.node.vm = this
+// Injected dependencies
+const tree = inject<any>('tree')
 
-      return {
-        loading: false
-      }
-    },
+// Reactive data
+const loading = ref(false)
+const anchor = ref<HTMLElement | null>(null)
 
-    computed: {
-      padding() {
-        return this.node.depth * (this.options.paddingLeft ? this.options.paddingLeft : this.options.nodeIndent) + 'px'
-      },
+// Computed properties
+const padding = computed(() => {
+  return (props.node.depth * (props.options.paddingLeft ?? props.options.nodeIndent)) + 'px'
+})
 
-      nodeClass() {
-        let state = this.node.states
-        let hasChildren = this.hasChildren()
-        let classes = {
-          'has-child': hasChildren,
-          'expanded': hasChildren && state.expanded,
-          'selected': state.selected,
-          'disabled': state.disabled,
-          'matched': state.matched,
-          'dragging': state.dragging,
-          'loading': this.loading,
-          'draggable': state.draggable
-        }
-
-        if (this.options.checkbox) {
-          classes['checked'] = state.checked
-          classes['indeterminate'] = state.indeterminate
-        }
-
-        return classes
-      },
-
-      visibleChildren() {
-        return this.node.children.filter(function(child) {
-          return child && child.visible()
-        })
-      }
-    },
-
-    methods: {
-      onNodeFocus() {
-        this.tree.activeElement = this.node
-      },
-
-      focus() {
-        this.$refs.anchor.focus()
-        this.node.select()
-      },
-
-      check() {
-        if (this.node.checked()) {
-          this.node.uncheck()
-        } else {
-          this.node.check()
-        }
-      },
-
-      select({ctrlKey} = evnt) {
-        const opts = this.options
-        const tree = this.tree
-        const node = this.node
-
-        tree.$emit('node:clicked', node)
-
-        if (opts.editing && node.isEditing) {
-          return
-        }
-
-        if (opts.editing && node.editable()) {
-          return this.startEditing()
-        }
-
-        if (opts.checkbox && opts.checkOnSelect) {
-          if (!opts.parentSelect && this.hasChildren()) {
-            return this.toggleExpand()
-          }
-
-          return this.check(ctrlKey)
-        }
-
-        // 'parentSelect' behaviour.
-        // For nodes which has a children list we have to expand/collapse
-        if (!opts.parentSelect && this.hasChildren()) {
-          this.toggleExpand()
-        }
-
-        if (opts.multiple) {
-          if (!node.selected()) {
-            node.select(ctrlKey)
-          } else {
-            if (ctrlKey) {
-              node.unselect()
-            } else {
-              if (this.tree.selectedNodes.length != 1) {
-                tree.unselectAll()
-                node.select()
-              }
-            }
-          }
-        } else {
-          if (node.selected() && ctrlKey) {
-            node.unselect()
-          } else {
-            node.select()
-          }
-        }
-      },
-
-      toggleExpand() {
-        if (this.hasChildren()) {
-          this.node.toggleExpand()
-        }
-      },
-
-      hasChildren() {
-        return this.node.hasChildren()
-      },
-
-      startEditing() {
-        if (this.tree._editingNode) {
-          this.tree._editingNode.stopEditing()
-        }
-
-        this.node.startEditing()
-      },
-
-      stopEditing() {
-        this.node.stopEditing()
-      },
-
-      handleMouseDown(event) {
-        if (!this.options.dnd) {
-          return
-        }
-
-        this.tree.vm.startDragging(this.node, event)
-      }
-    }
+const nodeClass = computed(() => {
+  const state = props.node.states
+  const hasChildrenValue = hasChildren()
+  const classes: Record<string, any> = {
+    'has-child': hasChildrenValue,
+    'expanded': hasChildrenValue && state.expanded,
+    'selected': state.selected,
+    'disabled': state.disabled,
+    'matched': state.matched,
+    'dragging': state.dragging,
+    'loading': loading.value,
+    'draggable': state.draggable
   }
 
-  export default TreeNode
+  if (props.options.checkbox) {
+    classes.checked = state.checked
+    classes.indeterminate = state.indeterminate
+  }
+
+  return classes
+})
+
+const visibleChildren = computed(() => {
+  return props.node.children.filter((child: any) => child && child.visible())
+})
+
+// Methods
+const hasChildren = () => {
+  return props.node.hasChildren()
+}
+
+const onNodeFocus = () => {
+  if (tree?.value) {
+    tree.value.activeElement = props.node
+  }
+}
+
+const focus = () => {
+  anchor.value?.focus()
+  props.node.select()
+}
+
+const check = () => {
+  if (props.node.checked()) {
+    props.node.uncheck()
+  } else {
+    props.node.check()
+  }
+}
+
+const select = (event?: MouseEvent) => {
+  const ctrlKey = event?.ctrlKey || false
+  const opts = props.options
+  const node = props.node
+
+  emit('node:clicked', node)
+
+  if (opts.editing && node.isEditing) {
+    return
+  }
+
+  if (opts.editing && node.editable()) {
+    return startEditing()
+  }
+
+  if (opts.checkbox && opts.checkOnSelect) {
+    if (!opts.parentSelect && hasChildren()) {
+      return toggleExpand()
+    }
+
+    return check()
+  }
+
+  // 'parentSelect' behaviour.
+  // For nodes which has a children list we have to expand/collapse
+  if (!opts.parentSelect && hasChildren()) {
+    toggleExpand()
+  }
+
+  if (opts.multiple) {
+    if (!node.selected()) {
+      node.select(ctrlKey)
+    } else {
+      if (ctrlKey) {
+        node.unselect()
+      } else {
+        if (tree?.value?.selectedNodes.length !== 1) {
+          tree?.value?.unselectAll()
+          node.select()
+        }
+      }
+    }
+  } else {
+    if (node.selected() && ctrlKey) {
+      node.unselect()
+    } else {
+      node.select()
+    }
+  }
+}
+
+const toggleExpand = () => {
+  if (hasChildren()) {
+    props.node.toggleExpand()
+  }
+}
+
+const startEditing = () => {
+  if (tree?.value?._editingNode) {
+    tree.value._editingNode.stopEditing()
+  }
+
+  props.node.startEditing()
+}
+
+const stopEditing = () => {
+  props.node.stopEditing()
+}
+
+const handleMouseDown = (event: MouseEvent) => {
+  if (!props.options.dnd) {
+    return
+  }
+
+  // Note: This will need to be updated when we migrate DND functionality
+  // tree?.value?.vm?.startDragging(props.node, event)
+}
+
+// Setup node VM reference
+watch(() => props.node, (node) => {
+  if (node) {
+    node.vm = { focus, startEditing, stopEditing }
+  }
+}, { immediate: true })
+
+// Expose methods to parent
+defineExpose({
+  focus,
+  startEditing,
+  stopEditing
+})
+
+// Define component name
+defineOptions({
+  name: 'TreeNode'
+})
 </script>
 
 <style>

@@ -2,12 +2,12 @@
   <component
     :is="tag"
     role="tree"
-    :class="{'tree': true, 'tree-loading': this.loading, 'tree--draggable' : !!this.draggableNode}"
+    :class="{'tree': true, 'tree-loading': loading, 'tree--draggable': !!draggableNode}"
   >
-    <template v-if="filter && matches.length == 0">
+    <template v-if="filter && matches.length === 0">
       <div
         class="tree-filter-empty"
-        v-html="opts.filter.emptyText"
+        v-html="treeOptions.filter.emptyText"
       />
     </template>
     <template v-else>
@@ -15,12 +15,14 @@
         class="tree-root"
         @dragstart="onDragStart"
       >
-        <template v-if="opts.filter.plainList && matches.length > 0">
+        <template v-if="treeOptions.filter.plainList && matches.length > 0">
           <TreeNode
             v-for="node in visibleMatches"
             :key="node.id"
             :node="node"
-            :options="opts"
+            :options="treeOptions"
+            @node:clicked="(node) => emit('node:clicked', node)"
+            @node:dblclick="(node) => emit('node:dblclick', node)"
           />
         </template>
         <template v-else>
@@ -28,7 +30,9 @@
             v-for="node in visibleModel"
             :key="node.id"
             :node="node"
-            :options="opts"
+            :options="treeOptions"
+            @node:clicked="(node) => emit('node:clicked', node)"
+            @node:dblclick="(node) => emit('node:dblclick', node)"
           />
         </template>
       </ul>
@@ -41,120 +45,78 @@
   </component>
 </template>
 
-<script>
-  import TreeNode from './TreeNode.vue'
-  import DraggableNode from './DraggableNode.vue'
-  import TreeMixin from '../mixins/TreeMixin.js'
-  import TreeDnd from '../mixins/DndMixin.js'
-  import Tree from '../lib/Tree.js'
+<script setup lang="ts">
+import { computed, provide, watch } from 'vue'
+import type { TreeOptions } from '../types'
+import TreeNode from './TreeNode.vue'
+import DraggableNode from './DraggableNode.vue'
+import { useTree } from '../composables/useTree'
+import { useDnd } from '../composables/useDnd'
 
-  const defaults = {
-    direction: 'ltr',
-    multiple: true,
-    checkbox: false,
-    checkOnSelect: false,
-    autoCheckChildren: true,
-    autoDisableChildren: true,
-    checkDisabledChildren: true,
-    parentSelect: false,
-    keyboardNavigation: true,
-    nodeIndent: 24,
-    minFetchDelay: 0,
-    fetchData: null,
-    propertyNames: null,
-    deletion: false,
-    dnd: false,
-    editing: false,
-    onFetchError: function(err) { throw err }
+// Props definition
+interface Props {
+  data?: any
+  options?: Partial<TreeOptions>
+  filter?: string
+  tag?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  data: () => [],
+  options: () => ({}),
+  filter: '',
+  tag: 'div'
+})
+
+// Emits definition
+const emit = defineEmits<{
+  'node:clicked': [node: any]
+  'node:dblclick': [node: any]
+  'node:selected': [node: any]
+  'node:unselected': [node: any]
+  'node:checked': [node: any]
+  'node:unchecked': [node: any]
+  'node:expanded': [node: any]
+  'node:collapsed': [node: any]
+  'tree:filtered': [query: string, matches: any[]]
+  'tree:data:loaded': [data: any[]]
+  'node:editing:start': [node: any]
+  'node:editing:stop': [node: any, oldText: string]
+  'tree:drop': [node: any, target: any, placement: string]
+}>()
+
+// Use composables
+const {
+  tree,
+  treeOptions,
+  model,
+  matches,
+  loading,
+  selectedNodes,
+  checkedNodes,
+  visibleModel,
+  visibleMatches
+} = useTree(props, emit)
+
+const {
+  draggableNode,
+  onDragStart
+} = useDnd(tree, treeOptions, emit)
+
+// Provide tree instance to child components
+provide('tree', tree)
+
+// Watch filter prop
+watch(() => props.filter, (newFilter) => {
+  if (tree.value) {
+    tree.value.filter(newFilter)
   }
+})
 
-  const filterDefaults = {
-    emptyText: 'Nothing found!',
-    matcher(query, node) {
-      const isMatched = new RegExp(query, 'i').test(node.text)
-
-      if (isMatched) {
-        if (node.parent && new RegExp(query, 'i').test(node.parent.text)) {
-          return false
-        }
-      }
-
-      return isMatched
-    },
-    plainList: false,
-    showChildren: true
-  };
-
-  export default {
-    name: 'Tree',
-    components: {
-      TreeNode,
-      DraggableNode
-    },
-
-    mixins: [TreeMixin, TreeDnd],
-
-    provide: _ => ({
-      tree: null
-    }),
-
-    props: {
-      data: {},
-
-      options: {
-        type: Object,
-        default: _ => ({})
-      },
-
-      filter: String,
-
-      tag: {
-        type: String,
-        default: 'div'
-      }
-    },
-
-    data () {
-      // we should not mutating a prop directly...
-      // that's why we have to create a new object
-      // TODO: add method for changing options
-      let opts = Object.assign({}, defaults, this.options)
-
-      opts.filter = Object.assign(
-        {},
-        filterDefaults,
-        opts.filter
-      )
-
-      return {
-        model: [],
-        tree: null,
-        loading: false,
-        opts,
-        matches: [],
-        draggableNode: null
-      }
-    },
-
-    computed: {
-      visibleModel() {
-        return this.model.filter(function(node) {
-          return node && node.visible()
-        }) 
-      },
-      visibleMatches() {
-        return this.matches.filter(function(node) {
-          return node && node.visible()
-        })
-      }
-    },
-    
-    watch: {
-      filter (term) {
-        this.tree.filter(term)
-      }
-    },
-  }
+// Define component name
+defineOptions({
+  name: 'LiquorTree'
+})
 </script>
 
 <style>

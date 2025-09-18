@@ -31,6 +31,14 @@ export interface NodeState {
   [key: string]: any;
 }
 
+// Store integration options
+export interface StoreOptions {
+  store: any;
+  mutations?: string[];
+  getter: () => TreeNodeData[];
+  dispatcher: (data: any) => void;
+}
+
 // Tree options interface
 export interface TreeOptions {
   data?: TreeNodeData[];
@@ -44,6 +52,7 @@ export interface TreeOptions {
   parentSelect?: boolean;
   keyboardNavigation?: boolean;
   nodeIndent?: number;
+  paddingLeft?: number; // Add missing paddingLeft option
   minFetchDelay?: number;
   fetchData?: FetchDataFunction | string | null;
   propertyNames?: PropertyNames | null;
@@ -53,7 +62,7 @@ export interface TreeOptions {
   onFetchError?: (error: any) => void;
   filter?: FilterOptions;
   modelParse?: (data: any) => TreeNodeData[];
-  store?: boolean;
+  store?: StoreOptions | boolean;
 }
 
 // Filter options
@@ -141,7 +150,27 @@ export interface TreeNode {
   showChildren: boolean;
   isBatch: boolean;
   isEditing: boolean;
+  // Node methods
+  hasChildren(): boolean;
+  visible(): boolean;
+  selected(): boolean;
+  checked(): boolean;
+  disabled(): boolean;
+  editable(): boolean;
+  select(extendList?: boolean): void;
+  unselect(): void;
+  check(): void;
+  uncheck(): void;
+  expand(): void;
+  collapse(): void;
+  toggleExpand(): void;
+  startEditing(): void;
+  stopEditing(newText?: string): void;
+  remove(): boolean;
 }
+
+// Alias for backward compatibility
+export type Node = TreeNode;
 
 // Forward declare TreeCore for circular references
 export interface TreeCore {

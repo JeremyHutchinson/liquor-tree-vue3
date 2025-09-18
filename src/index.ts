@@ -1,12 +1,16 @@
 // Main entry point for liquor-tree library
-// Phase 2: Core classes with TypeScript + mitt event system
+// Phase 3: Vue 3 Composition API components with TypeScript + mitt event system
 
 export * from './types';
 export * from './core';
+export * from './composables';
 
-// Placeholder component export - will be updated in Phase 3
-// For now, we'll create a minimal stub to allow the build to work
-export { default as LiquorTree } from './components/TreeRoot';
+// Export Vue components (avoiding conflict with TreeNode type)
+export { default as LiquorTree } from './components/TreeRoot.vue';
+export { default as TreeRoot } from './components/TreeRoot.vue';
+export { default as TreeNode } from './components/TreeNode.vue';
+export { default as NodeContent } from './components/NodeContent.vue';
+export { default as DraggableNode } from './components/DraggableNode.vue';
 
 // Library version
 export const version = '1.0.0';

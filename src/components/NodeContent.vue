@@ -1,55 +1,60 @@
-<script>
-  const NodeContent = {
-    name: 'node-content',
-    props: ['node'],
-    render (h) {
-      const node = this.node
-      const vm = this.node.tree.vm
+<template>
+  <span v-if="!node.isEditing" v-html="node.text" />
+  <input
+    v-else
+    ref="editCtrl"
+    v-model="nodeText"
+    type="text"
+    class="tree-input"
+    @blur="stopEditing"
+    @keyup.enter="stopEditing"
+    @mouseup.stop
+  />
+</template>
 
-      if (node.isEditing) {
-        let nodeText = node.text
+<script setup lang="ts">
+import { ref, watch, nextTick } from 'vue'
+import type { Node as INode } from '../types'
 
-        this.$nextTick(_ => {
-          this.$refs.editCtrl.focus()
-        })
+// Props
+interface Props {
+  node: INode
+}
 
-        return h('input', {
-          domProps: {
-            value: node.text,
-            type: 'text'
-          },
-          class: 'tree-input',
-          on: {
-            input (e) {
-              nodeText = e.target.value
-            },
-            blur () {
-              node.stopEditing(nodeText)
-            },
-            keyup (e) {
-              if (e.keyCode === 13) {
-                node.stopEditing(nodeText)
-              }
-            },
-            mouseup (e) {
-              e.stopPropagation()
-            }
-          },
-          ref: 'editCtrl'
-        })
-      }
+const props = defineProps<Props>()
 
-      if (vm.$scopedSlots.default) {
-        return vm.$scopedSlots.default({ node: this.node })
-      }
+// Reactive data
+const nodeText = ref(props.node.text)
+const editCtrl = ref<HTMLInputElement | null>(null)
 
-      return h('span', {
-        domProps: {
-          innerHTML: node.text
-        }
+// Methods
+const stopEditing = () => {
+  props.node.stopEditing(nodeText.value)
+}
+
+// Watch for editing state changes
+watch(
+  () => props.node.isEditing,
+  (isEditing) => {
+    if (isEditing) {
+      nodeText.value = props.node.text
+      nextTick(() => {
+        editCtrl.value?.focus()
       })
     }
   }
+)
 
-  export default NodeContent
+// Watch for node text changes
+watch(
+  () => props.node.text,
+  (newText) => {
+    nodeText.value = newText
+  }
+)
+
+// Define component name
+defineOptions({
+  name: 'NodeContent'
+})
 </script>
