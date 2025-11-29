@@ -252,12 +252,12 @@ describe('Tree', () => {
       expect(tree.selectedNodes).toHaveLength(1)
     })
 
-    it('should allow multiple selections if multiple is true', () => {
+    it('should allow multiple selections if multiple is true and extendSelection is true', () => {
       const node1 = tree.model[0]
       const node2 = tree.model[1]
 
       tree.select(node1)
-      tree.select(node2)
+      tree.select(node2, true) // Pass extendSelection: true
 
       expect(node1.selected()).toBe(true)
       expect(node2.selected()).toBe(true)

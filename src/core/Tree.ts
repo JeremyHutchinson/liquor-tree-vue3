@@ -139,12 +139,25 @@ export class Tree {
    * Select a node
    */
   select(node: Node, extendSelection: boolean = false): void {
-    if (node.state('disabled') || node.selected()) {
+    if (node.state('disabled')) {
       return
     }
 
-    // If not multiple selection, unselect all others
-    if (!this.options.multiple && !extendSelection) {
+    // If node is already selected and extending selection (Cmd/Ctrl+click), toggle it off
+    if (node.selected() && extendSelection && this.options.multiple) {
+      this.unselect(node)
+      return
+    }
+
+    // If already selected, don't do anything
+    if (node.selected()) {
+      return
+    }
+
+    // Clear previous selection unless:
+    // - multiple is true AND extendSelection is true (Cmd/Ctrl+click)
+    const shouldClearPrevious = !(this.options.multiple && extendSelection)
+    if (shouldClearPrevious) {
       this.unselectAll()
     }
 

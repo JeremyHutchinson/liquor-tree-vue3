@@ -46,7 +46,9 @@ const toggleExpand = () => {
 const handleClick = (event: MouseEvent) => {
   // Select the node on click
   if (props.node) {
-    props.node.select()
+    // Check if Cmd (Mac) or Ctrl (Windows/Linux) is pressed for multi-select
+    const extendSelection = event.metaKey || event.ctrlKey
+    props.node.select(extendSelection)
   }
 }
 </script>

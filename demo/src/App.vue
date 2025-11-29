@@ -21,8 +21,14 @@
     </div>
 
     <div class="demo-section">
-      <h2>Nested Tree Example</h2>
+      <h2>Nested Tree Example (Single Selection)</h2>
       <TreeRoot :data="nestedData" :options="treeOptions" />
+    </div>
+
+    <div class="demo-section">
+      <h2>Multiple Selection Example</h2>
+      <p class="info-text">Hold Cmd (Mac) or Ctrl (Windows/Linux) and click to select multiple nodes</p>
+      <TreeRoot :data="multiSelectData" :options="multiSelectOptions" />
     </div>
   </div>
 </template>
@@ -68,9 +74,24 @@ const nestedData: TreeNodeData[] = [
   }
 ]
 
-// Tree options - single selection for now
+// Tree options - single selection
 const treeOptions: TreeOptions = {
   multiple: false,
+  checkbox: false
+}
+
+// Multi-select tree data
+const multiSelectData: TreeNodeData[] = [
+  { text: 'Item 1' },
+  { text: 'Item 2' },
+  { text: 'Item 3' },
+  { text: 'Item 4' },
+  { text: 'Item 5' }
+]
+
+// Multi-select tree options
+const multiSelectOptions: TreeOptions = {
+  multiple: true,
   checkbox: false
 }
 </script>
@@ -111,5 +132,15 @@ p {
 .progress-list li {
   padding: 0.5rem 0;
   color: #333;
+}
+
+.info-text {
+  margin: 0 0 1rem 0;
+  padding: 0.75rem;
+  background-color: #e3f2fd;
+  border-left: 3px solid #2196f3;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  color: #1565c0;
 }
 </style>
