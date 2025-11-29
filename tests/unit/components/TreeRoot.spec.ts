@@ -103,33 +103,39 @@ describe('TreeRoot.vue', () => {
   })
 
   describe('rendering', () => {
-    it('should render tree root element', () => {
+    it('should render tree root element', async () => {
       const wrapper = mount(TreeRoot, {
         props: {
           data: sampleData
         }
       })
+
+      await wrapper.vm.$nextTick()
 
       expect(wrapper.find('.tree-root').exists()).toBe(true)
     })
 
-    it('should render root nodes', () => {
+    it('should render root nodes', async () => {
       const wrapper = mount(TreeRoot, {
         props: {
           data: sampleData
         }
       })
+
+      await wrapper.vm.$nextTick()
 
       const nodes = wrapper.findAll('.tree-node')
       expect(nodes.length).toBeGreaterThan(0)
     })
 
-    it('should render empty state when no data', () => {
+    it('should render empty state when no data', async () => {
       const wrapper = mount(TreeRoot, {
         props: {
           data: []
         }
       })
+
+      await wrapper.vm.$nextTick()
 
       expect(wrapper.find('.tree-root').exists()).toBe(true)
       const nodes = wrapper.findAll('.tree-node')

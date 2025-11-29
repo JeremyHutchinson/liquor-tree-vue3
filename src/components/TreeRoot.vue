@@ -1,6 +1,6 @@
 <template>
   <div class="liquor-tree">
-    <ul class="tree-root">
+    <ul v-if="tree" class="tree-root">
       <TreeNode
         v-for="node in tree.model"
         :key="node.id"
@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { Tree } from '@/core/Tree'
 import TreeNode from './TreeNode.vue'
 import type { TreeNodeData, TreeOptions } from '@/types'
@@ -27,16 +27,20 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Create the tree instance
-const tree = ref(new Tree(props.options))
+const tree = ref<Tree | null>(null)
 
-// Initialize tree with data
-if (props.data && props.data.length > 0) {
-  tree.value.setModel(props.data)
-}
+// Initialize tree
+onMounted(() => {
+  tree.value = new Tree(props.options)
+
+  if (props.data && props.data.length > 0) {
+    tree.value.setModel(props.data)
+  }
+})
 
 // Watch for data changes
 watch(() => props.data, (newData) => {
-  if (newData) {
+  if (newData && tree.value) {
     tree.value.setModel(newData)
   }
 }, { deep: true })
@@ -53,7 +57,7 @@ watch(() => props.options, (newOptions) => {
 
 // Expose tree instance for parent component access via ref
 defineExpose({
-  tree: tree.value
+  tree
 })
 </script>
 
