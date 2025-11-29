@@ -14,7 +14,21 @@ describe('Node', () => {
       options: {
         autoCheckChildren: true
       },
-      $emit: mockEmit
+      $emit: mockEmit,
+      selectedNodes: [],
+      select: vi.fn((node: Node) => {
+        node.state('selected', true)
+        if (!tree.selectedNodes.includes(node)) {
+          tree.selectedNodes.push(node)
+        }
+      }),
+      unselect: vi.fn((node: Node) => {
+        node.state('selected', false)
+        const index = tree.selectedNodes.indexOf(node)
+        if (index > -1) {
+          tree.selectedNodes.splice(index, 1)
+        }
+      })
     } as any
   })
 
@@ -336,6 +350,79 @@ describe('Node', () => {
       expect(mockEmit).toHaveBeenCalledWith('node:data:changed', node, expect.objectContaining({
         custom: 'data'
       }))
+    })
+  })
+
+  describe('select/unselect', () => {
+    it('should select an unselected node', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { selected: false }
+      })
+
+      node.select()
+
+      expect(node.selected()).toBe(true)
+    })
+
+    it('should call tree.select when selecting', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { selected: false }
+      })
+
+      const treeSpy = vi.spyOn(tree, 'select')
+      node.select()
+
+      expect(treeSpy).toHaveBeenCalledWith(node, false)
+    })
+
+    it('should unselect a selected node', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { selected: true }
+      })
+
+      tree.selectedNodes = [node]
+      node.unselect()
+
+      expect(node.selected()).toBe(false)
+    })
+
+    it('should call tree.unselect when unselecting', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { selected: true }
+      })
+
+      tree.selectedNodes = [node]
+      const treeSpy = vi.spyOn(tree, 'unselect')
+      node.unselect()
+
+      expect(treeSpy).toHaveBeenCalledWith(node)
+    })
+
+    it('should toggle from unselected to selected', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { selected: false }
+      })
+
+      node.toggleSelect()
+
+      expect(node.selected()).toBe(true)
+    })
+
+    it('should toggle from selected to unselected', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { selected: true }
+      })
+
+      tree.selectedNodes = [node]
+      node.toggleSelect()
+
+      expect(node.selected()).toBe(false)
     })
   })
 

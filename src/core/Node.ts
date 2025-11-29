@@ -225,6 +225,31 @@ export class Node {
   }
 
   /**
+   * Select the node
+   */
+  select(extendSelection: boolean = false): void {
+    this.tree.select(this, extendSelection)
+  }
+
+  /**
+   * Unselect the node
+   */
+  unselect(): void {
+    this.tree.unselect(this)
+  }
+
+  /**
+   * Toggle selection state
+   */
+  toggleSelect(): void {
+    if (this.selected()) {
+      this.unselect()
+    } else {
+      this.select()
+    }
+  }
+
+  /**
    * Expand the node
    */
   expand(): void {

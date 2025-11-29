@@ -1,12 +1,16 @@
 <template>
   <li class="tree-node">
-    <div class="tree-content">
+    <div
+      class="tree-content"
+      :class="{ 'tree-content-selected': node?.selected() }"
+      @click="handleClick"
+    >
       <!-- Expand/collapse toggle -->
       <span
         v-if="node?.hasChildren?.()"
         class="tree-arrow"
         :class="{ 'tree-arrow-expanded': node?.expanded() }"
-        @click="toggleExpand"
+        @click.stop="toggleExpand"
       >
         ▶
       </span>
@@ -38,6 +42,13 @@ const props = defineProps<Props>()
 const toggleExpand = () => {
   props.node?.toggleExpand()
 }
+
+const handleClick = (event: MouseEvent) => {
+  // Select the node on click
+  if (props.node) {
+    props.node.select()
+  }
+}
 </script>
 
 <style scoped>
@@ -53,10 +64,22 @@ const toggleExpand = () => {
   user-select: none;
   display: flex;
   align-items: center;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
 }
 
 .tree-content:hover {
   background-color: #f5f5f5;
+}
+
+.tree-content-selected {
+  background-color: #e3f2fd;
+  border-left: 3px solid #2196f3;
+  padding-left: 5px;
+}
+
+.tree-content-selected:hover {
+  background-color: #bbdefb;
 }
 
 .tree-arrow {

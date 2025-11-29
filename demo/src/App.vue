@@ -68,9 +68,9 @@ const nestedData: TreeNodeData[] = [
   }
 ]
 
-// Tree options
+// Tree options - single selection for now
 const treeOptions: TreeOptions = {
-  multiple: true,
+  multiple: false,
   checkbox: false
 }
 </script>
