@@ -42,9 +42,11 @@ const basicData: TreeNodeData[] = [
 const nestedData: TreeNodeData[] = [
   {
     text: 'Root 1',
+    state: { expanded: true },
     children: [
       {
         text: 'Child 1.1',
+        state: { expanded: true },
         children: [
           { text: 'Grandchild 1.1.1' },
           { text: 'Grandchild 1.1.2' }
@@ -55,6 +57,7 @@ const nestedData: TreeNodeData[] = [
   },
   {
     text: 'Root 2',
+    state: { expanded: true },
     children: [
       { text: 'Child 2.1' },
       { text: 'Child 2.2' }

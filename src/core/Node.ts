@@ -223,4 +223,35 @@ export class Node {
   editable(): boolean {
     return !this.state('disabled') && this.state('editable') === true
   }
+
+  /**
+   * Expand the node
+   */
+  expand(): void {
+    if (!this.expanded()) {
+      this.state('expanded', true)
+      this.$emit('expanded')
+    }
+  }
+
+  /**
+   * Collapse the node
+   */
+  collapse(): void {
+    if (this.expanded()) {
+      this.state('expanded', false)
+      this.$emit('collapsed')
+    }
+  }
+
+  /**
+   * Toggle expand/collapse state
+   */
+  toggleExpand(): void {
+    if (this.expanded()) {
+      this.collapse()
+    } else {
+      this.expand()
+    }
+  }
 }

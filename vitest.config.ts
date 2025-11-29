@@ -8,8 +8,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['tests/**/*.{test,spec}.{js,ts}'],
-    exclude: ['.legacy/**'],
+    include: ['tests/unit/**/*.{test,spec}.{js,ts}'],
+    exclude: ['.legacy/**', 'tests/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

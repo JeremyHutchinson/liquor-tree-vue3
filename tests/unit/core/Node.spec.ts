@@ -338,4 +338,94 @@ describe('Node', () => {
       }))
     })
   })
+
+  describe('expand/collapse', () => {
+    it('should expand a collapsed node', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: false }
+      })
+
+      node.expand()
+
+      expect(node.expanded()).toBe(true)
+    })
+
+    it('should not change state when expanding already expanded node', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: true }
+      })
+
+      node.expand()
+
+      expect(node.expanded()).toBe(true)
+    })
+
+    it('should emit node:expanded event when expanding', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: false }
+      })
+
+      node.expand()
+
+      expect(mockEmit).toHaveBeenCalledWith('node:expanded', node)
+    })
+
+    it('should collapse an expanded node', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: true }
+      })
+
+      node.collapse()
+
+      expect(node.expanded()).toBe(false)
+    })
+
+    it('should not change state when collapsing already collapsed node', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: false }
+      })
+
+      node.collapse()
+
+      expect(node.expanded()).toBe(false)
+    })
+
+    it('should emit node:collapsed event when collapsing', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: true }
+      })
+
+      node.collapse()
+
+      expect(mockEmit).toHaveBeenCalledWith('node:collapsed', node)
+    })
+
+    it('should toggle from collapsed to expanded', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: false }
+      })
+
+      node.toggleExpand()
+
+      expect(node.expanded()).toBe(true)
+    })
+
+    it('should toggle from expanded to collapsed', () => {
+      const node = new Node(tree, {
+        text: 'Test',
+        state: { expanded: true }
+      })
+
+      node.toggleExpand()
+
+      expect(node.expanded()).toBe(false)
+    })
+  })
 })
