@@ -299,7 +299,8 @@ describe('Tree', () => {
       tree.check(node)
 
       expect(node.checked()).toBe(true)
-      expect(tree.checkedNodes).toHaveLength(1)
+      // With autoCheckChildren enabled, checking parent checks all children too
+      expect(tree.checkedNodes).toHaveLength(3) // parent + 2 children
     })
 
     it('should uncheck a node', () => {

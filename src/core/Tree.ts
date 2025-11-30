@@ -208,10 +208,27 @@ export class Tree {
     }
 
     node.state('checked', true)
+    node.state('indeterminate', false)
 
     if (!this.checkedNodes.includes(node)) {
       this.checkedNodes.push(node)
     }
+
+    // Auto-check children if option is enabled
+    if (this.options.autoCheckChildren && node.hasChildren()) {
+      node.recurseDown((child) => {
+        if (!child.checked()) {
+          child.state('checked', true)
+          child.state('indeterminate', false)
+          if (!this.checkedNodes.includes(child)) {
+            this.checkedNodes.push(child)
+          }
+        }
+      }, true) // Skip the node itself
+    }
+
+    // Update parent indeterminate state
+    this.updateParentState(node)
 
     this.$emit('node:checked', node)
   }
@@ -225,13 +242,84 @@ export class Tree {
     }
 
     node.state('checked', false)
+    node.state('indeterminate', false)
 
     const index = this.checkedNodes.indexOf(node)
     if (index > -1) {
       this.checkedNodes.splice(index, 1)
     }
 
+    // Auto-uncheck children if option is enabled
+    if (this.options.autoCheckChildren && node.hasChildren()) {
+      node.recurseDown((child) => {
+        if (child.checked()) {
+          child.state('checked', false)
+          child.state('indeterminate', false)
+          const childIndex = this.checkedNodes.indexOf(child)
+          if (childIndex > -1) {
+            this.checkedNodes.splice(childIndex, 1)
+          }
+        }
+      }, true) // Skip the node itself
+    }
+
+    // Update parent indeterminate state
+    this.updateParentState(node)
+
     this.$emit('node:unchecked', node)
+  }
+
+  /**
+   * Update parent node's checked/indeterminate state based on children
+   */
+  private updateParentState(node: Node): void {
+    if (!node.parent) {
+      return
+    }
+
+    const parent = node.parent
+    const siblings = parent.children
+
+    // Count checked and indeterminate children
+    let checkedCount = 0
+    let indeterminateCount = 0
+
+    for (const sibling of siblings) {
+      if (sibling.checked()) {
+        checkedCount++
+      } else if (sibling.indeterminate()) {
+        indeterminateCount++
+      }
+    }
+
+    // Update parent state
+    if (checkedCount === siblings.length) {
+      // All children checked
+      parent.state('checked', true)
+      parent.state('indeterminate', false)
+      if (!this.checkedNodes.includes(parent)) {
+        this.checkedNodes.push(parent)
+      }
+    } else if (checkedCount > 0 || indeterminateCount > 0) {
+      // Some children checked or indeterminate
+      parent.state('checked', false)
+      parent.state('indeterminate', true)
+      const parentIndex = this.checkedNodes.indexOf(parent)
+      if (parentIndex > -1) {
+        this.checkedNodes.splice(parentIndex, 1)
+      }
+    } else {
+      // No children checked
+      parent.state('checked', false)
+      parent.state('indeterminate', false)
+      const parentIndex = this.checkedNodes.indexOf(parent)
+      if (parentIndex > -1) {
+        this.checkedNodes.splice(parentIndex, 1)
+      }
+    }
+
+    // Recursively update grandparents
+    this.updateParentState(parent)
   }
 
   /**
