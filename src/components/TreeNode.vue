@@ -2,7 +2,10 @@
   <li class="tree-node">
     <div
       class="tree-content"
-      :class="{ 'tree-content-selected': node?.selected() }"
+      :class="{
+        'tree-content-selected': node?.selected(),
+        'tree-content-focused': isActiveElement
+      }"
       @click="handleClick"
     >
       <!-- Expand/collapse toggle -->
@@ -31,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Node } from '@/core/Node'
 
 interface Props {
@@ -38,6 +42,10 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const isActiveElement = computed(() => {
+  return props.node?.tree?.activeElement === props.node
+})
 
 const toggleExpand = () => {
   props.node?.toggleExpand()
@@ -49,6 +57,8 @@ const handleClick = (event: MouseEvent) => {
     // Check if Cmd (Mac) or Ctrl (Windows/Linux) is pressed for multi-select
     const extendSelection = event.metaKey || event.ctrlKey
     props.node.select(extendSelection)
+    // Also set as active element for keyboard navigation
+    props.node.focus()
   }
 }
 </script>
@@ -82,6 +92,11 @@ const handleClick = (event: MouseEvent) => {
 
 .tree-content-selected:hover {
   background-color: #bbdefb;
+}
+
+.tree-content-focused {
+  outline: 2px solid #2196f3;
+  outline-offset: -2px;
 }
 
 .tree-arrow {

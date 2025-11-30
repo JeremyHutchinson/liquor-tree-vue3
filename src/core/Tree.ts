@@ -396,4 +396,64 @@ export class Tree {
       })
     }
   }
+
+  /**
+   * Get all visible nodes in tree order
+   * (nodes that are expanded and not filtered out)
+   */
+  private getVisibleNodes(): Node[] {
+    const visibleNodes: Node[] = []
+
+    const collectVisible = (nodes: Node[]) => {
+      for (const node of nodes) {
+        // Add node if it's visible (not filtered out)
+        if (node.state('visible') !== false) {
+          visibleNodes.push(node)
+
+          // If expanded, add children recursively
+          if (node.expanded() && node.children.length > 0) {
+            collectVisible(node.children)
+          }
+        }
+      }
+    }
+
+    collectVisible(this.model)
+    return visibleNodes
+  }
+
+  /**
+   * Get the next visible node after the given node
+   */
+  nextVisibleNode(node: Node): Node | null {
+    const visibleNodes = this.getVisibleNodes()
+    const currentIndex = visibleNodes.indexOf(node)
+
+    if (currentIndex === -1 || currentIndex === visibleNodes.length - 1) {
+      return null
+    }
+
+    return visibleNodes[currentIndex + 1]
+  }
+
+  /**
+   * Get the previous visible node before the given node
+   */
+  prevVisibleNode(node: Node): Node | null {
+    const visibleNodes = this.getVisibleNodes()
+    const currentIndex = visibleNodes.indexOf(node)
+
+    if (currentIndex <= 0) {
+      return null
+    }
+
+    return visibleNodes[currentIndex - 1]
+  }
+
+  /**
+   * Check if object is a Node instance
+   */
+  isNode(obj: any): obj is Node {
+    return obj instanceof Node
+  }
 }

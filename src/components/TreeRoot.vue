@@ -1,5 +1,5 @@
 <template>
-  <div class="liquor-tree">
+  <div ref="rootEl" class="liquor-tree" tabindex="0">
     <ul v-if="tree" class="tree-root">
       <TreeNode
         v-for="node in tree.model"
@@ -11,9 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { Tree } from '@/core/Tree'
 import TreeNode from './TreeNode.vue'
+import { useKeyboardNav } from '@/composables'
 import type { TreeNodeData, TreeOptions } from '@/types'
 
 interface Props {
@@ -29,6 +30,9 @@ const props = withDefaults(defineProps<Props>(), {
 // Create the tree instance
 const tree = ref<Tree | null>(null)
 
+// Root element ref
+const rootEl = ref<HTMLElement | null>(null)
+
 // Initialize tree
 onMounted(() => {
   tree.value = new Tree(props.options)
@@ -36,6 +40,13 @@ onMounted(() => {
   if (props.data && props.data.length > 0) {
     tree.value.setModel(props.data)
   }
+
+  // Initialize keyboard navigation if enabled and root element is available
+  nextTick(() => {
+    if (tree.value?.options.keyboardNavigation !== false && rootEl.value) {
+      useKeyboardNav(tree, rootEl.value)
+    }
+  })
 })
 
 // Watch for data changes
@@ -64,6 +75,10 @@ defineExpose({
 <style scoped>
 .liquor-tree {
   font-family: sans-serif;
+}
+
+.liquor-tree:focus {
+  outline: none;
 }
 
 .tree-root {

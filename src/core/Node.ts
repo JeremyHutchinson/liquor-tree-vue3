@@ -279,4 +279,40 @@ export class Node {
       this.expand()
     }
   }
+
+  /**
+   * Convenience method: check if node is collapsed
+   */
+  collapsed(): boolean {
+    return !this.expanded()
+  }
+
+  /**
+   * Check the node (checkbox feature)
+   */
+  check(): void {
+    this.tree.check(this)
+  }
+
+  /**
+   * Uncheck the node (checkbox feature)
+   */
+  uncheck(): void {
+    this.tree.uncheck(this)
+  }
+
+  /**
+   * Get first child node
+   */
+  first(): Node | null {
+    return this.children.length > 0 ? this.children[0] : null
+  }
+
+  /**
+   * Focus this node (set as activeElement)
+   */
+  focus(): void {
+    this.tree.activeElement = this
+    this.$emit('focused')
+  }
 }

@@ -1,0 +1,158 @@
+import { type Ref, onMounted, onUnmounted } from 'vue'
+import type { Tree } from '../core/Tree'
+import type { Node } from '../core/Node'
+
+/**
+ * Keyboard navigation composable for tree component
+ * Handles arrow keys, Enter, Space for navigation and interaction
+ */
+export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: HTMLElement) {
+  /**
+   * Navigate to previous visible node
+   */
+  function focusUp(currentNode: Node): void {
+    const prevNode = tree.value?.prevVisibleNode(currentNode)
+
+    if (!prevNode) {
+      return
+    }
+
+    if (prevNode.disabled()) {
+      return focusUp(prevNode)
+    }
+
+    prevNode.focus()
+  }
+
+  /**
+   * Navigate to next visible node
+   */
+  function focusDown(currentNode: Node): void {
+    const nextNode = tree.value?.nextVisibleNode(currentNode)
+
+    if (!nextNode) {
+      return
+    }
+
+    if (nextNode.disabled()) {
+      return focusDown(nextNode)
+    }
+
+    nextNode.focus()
+  }
+
+  /**
+   * Handle left arrow key - collapse or go to parent
+   */
+  function leftArrow(node: Node): void {
+    if (node.expanded()) {
+      node.collapse()
+    } else {
+      const parent = node.parent
+
+      if (parent) {
+        parent.focus()
+      }
+    }
+  }
+
+  /**
+   * Handle right arrow key - expand or go to first child
+   */
+  function rightArrow(node: Node): void {
+    if (node.collapsed() && node.children.length > 0) {
+      node.expand()
+    } else if (node.expanded()) {
+      const first = node.first()
+
+      if (first) {
+        first.focus()
+      }
+    }
+  }
+
+  /**
+   * Toggle checkbox state for node
+   */
+  function checkNode(node: Node): void {
+    if (!tree.value?.options.checkbox) {
+      return
+    }
+
+    if (node.checked()) {
+      node.uncheck()
+    } else {
+      node.check()
+    }
+  }
+
+  /**
+   * Handle keyboard events
+   */
+  function handleKeyDown(event: KeyboardEvent): void {
+    const node = tree.value?.activeElement
+
+    if (!node || !tree.value?.isNode(node)) {
+      return
+    }
+
+    // Don't handle keys when node is being edited
+    if (node.isEditing) {
+      if (event.key === 'Escape') {
+        // TODO: Implement stop editing
+        // node.stopEditing(false)
+      }
+      return
+    }
+
+    // Handle navigation and action keys
+    const handledKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter']
+
+    if (handledKeys.includes(event.key)) {
+      event.preventDefault()
+      event.stopPropagation()
+
+      switch (event.key) {
+        case 'ArrowUp':
+          focusUp(node)
+          break
+        case 'ArrowDown':
+          focusDown(node)
+          break
+        case 'ArrowLeft':
+          leftArrow(node)
+          break
+        case 'ArrowRight':
+          rightArrow(node)
+          break
+        case ' ':
+        case 'Enter':
+          checkNode(node)
+          break
+      }
+    }
+  }
+
+  // Set up event listener when mounted
+  onMounted(() => {
+    if (rootElement) {
+      rootElement.addEventListener('keydown', handleKeyDown, true)
+    }
+  })
+
+  // Clean up event listener when unmounted
+  onUnmounted(() => {
+    if (rootElement) {
+      rootElement.removeEventListener('keydown', handleKeyDown, true)
+    }
+  })
+
+  return {
+    handleKeyDown,
+    focusUp,
+    focusDown,
+    leftArrow,
+    rightArrow,
+    checkNode
+  }
+}
