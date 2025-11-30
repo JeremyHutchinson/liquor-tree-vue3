@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject, type Ref } from 'vue'
 import type { Node } from '@/core/Node'
 
 interface Props {
@@ -43,8 +43,11 @@ interface Props {
 
 const props = defineProps<Props>()
 
+// Inject the reactive activeElement from TreeRoot
+const activeElement = inject<Ref<Node | null>>('activeElement')
+
 const isActiveElement = computed(() => {
-  return props.node?.tree?.activeElement === props.node
+  return activeElement?.value === props.node
 })
 
 const toggleExpand = () => {

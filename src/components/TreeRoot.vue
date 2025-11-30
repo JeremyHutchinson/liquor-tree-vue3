@@ -11,11 +11,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, watch, onMounted, nextTick, provide } from 'vue'
 import { Tree } from '@/core/Tree'
 import TreeNode from './TreeNode.vue'
 import { useKeyboardNav } from '@/composables'
 import type { TreeNodeData, TreeOptions } from '@/types'
+import type { Node } from '@/core/Node'
 
 interface Props {
   data?: TreeNodeData[]
@@ -33,6 +34,12 @@ const tree = ref<Tree | null>(null)
 // Root element ref
 const rootEl = ref<HTMLElement | null>(null)
 
+// Reactive active element for keyboard navigation
+const activeElement = ref<Node | null>(null)
+
+// Provide activeElement to child components
+provide('activeElement', activeElement)
+
 // Initialize tree
 onMounted(() => {
   tree.value = new Tree(props.options)
@@ -40,6 +47,21 @@ onMounted(() => {
   if (props.data && props.data.length > 0) {
     tree.value.setModel(props.data)
   }
+
+  // Sync tree.activeElement with reactive ref
+  // Override the activeElement setter to trigger reactivity
+  let internalActiveElement = tree.value.activeElement
+  Object.defineProperty(tree.value, 'activeElement', {
+    get() {
+      return internalActiveElement
+    },
+    set(value: Node | null) {
+      internalActiveElement = value
+      activeElement.value = value
+    },
+    enumerable: true,
+    configurable: true
+  })
 
   // Initialize keyboard navigation if enabled and root element is available
   nextTick(() => {
