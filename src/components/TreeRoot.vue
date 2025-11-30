@@ -11,10 +11,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick, provide } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick, provide } from 'vue'
 import { Tree } from '@/core/Tree'
 import TreeNode from './TreeNode.vue'
-import { useKeyboardNav } from '@/composables'
+import { useKeyboardNav, useDragDrop } from '@/composables'
 import type { TreeNodeData, TreeOptions } from '@/types'
 import type { Node } from '@/core/Node'
 
@@ -43,6 +43,12 @@ provide('activeElement', activeElement)
 // Initialize keyboard navigation composable (must be called during setup)
 // It will only attach event listeners after the element is available
 const keyboardNav = useKeyboardNav(tree, rootEl)
+
+// Initialize drag & drop composable
+const dragDrop = useDragDrop(tree, rootEl)
+
+// Provide dragDrop to child components
+provide('dragDrop', dragDrop)
 
 // Initialize tree
 onMounted(() => {
@@ -84,6 +90,11 @@ watch(() => props.options, (newOptions) => {
     }
   }
 }, { deep: true })
+
+// Cleanup on unmount
+onUnmounted(() => {
+  dragDrop.cleanup()
+})
 
 // Expose tree instance for parent component access via ref
 defineExpose({

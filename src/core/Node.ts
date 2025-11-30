@@ -315,4 +315,104 @@ export class Node {
     this.tree.activeElement = this
     this.$emit('focused')
   }
+
+  /**
+   * Check if node is draggable
+   */
+  isDraggable(): boolean {
+    const draggableState = this.state('draggable')
+    if (draggableState === false) {
+      return false
+    }
+    return true
+  }
+
+  /**
+   * Check if node can accept drops
+   */
+  isDropable(): boolean {
+    const dropableState = this.state('dropable')
+    if (dropableState === false) {
+      return false
+    }
+    return true
+  }
+
+  /**
+   * Remove this node from its parent
+   */
+  remove(): void {
+    if (!this.parent) {
+      // Remove from tree root
+      const index = this.tree.model.indexOf(this)
+      if (index > -1) {
+        this.tree.model.splice(index, 1)
+      }
+    } else {
+      // Remove from parent's children
+      const index = this.parent.children.indexOf(this)
+      if (index > -1) {
+        this.parent.children.splice(index, 1)
+      }
+    }
+    this.$emit('removed')
+  }
+
+  /**
+   * Append a node as a child of this node
+   */
+  append(node: Node): void {
+    // Remove from current location
+    node.remove()
+
+    // Add to this node's children
+    this.children.push(node)
+    node.parent = this
+
+    this.$emit('child:added', node)
+  }
+
+  /**
+   * Insert a node before this node
+   */
+  insertBefore(node: Node): void {
+    // Remove from current location
+    node.remove()
+
+    if (!this.parent) {
+      // Insert in tree root
+      const index = this.tree.model.indexOf(this)
+      this.tree.model.splice(index, 0, node)
+      node.parent = null
+    } else {
+      // Insert in parent's children
+      const index = this.parent.children.indexOf(this)
+      this.parent.children.splice(index, 0, node)
+      node.parent = this.parent
+    }
+
+    this.$emit('node:inserted:before', node)
+  }
+
+  /**
+   * Insert a node after this node
+   */
+  insertAfter(node: Node): void {
+    // Remove from current location
+    node.remove()
+
+    if (!this.parent) {
+      // Insert in tree root
+      const index = this.tree.model.indexOf(this)
+      this.tree.model.splice(index + 1, 0, node)
+      node.parent = null
+    } else {
+      // Insert in parent's children
+      const index = this.parent.children.indexOf(this)
+      this.parent.children.splice(index + 1, 0, node)
+      node.parent = this.parent
+    }
+
+    this.$emit('node:inserted:after', node)
+  }
 }

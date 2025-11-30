@@ -1,5 +1,5 @@
 <template>
-  <li class="tree-node">
+  <li v-if="isVisible" class="tree-node" :data-id="node?.id">
     <div
       class="tree-content"
       :class="{
@@ -7,7 +7,24 @@
         'tree-content-focused': isActiveElement
       }"
       @click="handleClick"
+      @mousedown="handleMouseDown"
     >
+      <!-- Checkbox (if enabled) -->
+      <span
+        v-if="showCheckbox"
+        class="tree-checkbox"
+        :class="{
+          'tree-checkbox-checked': node?.checked(),
+          'tree-checkbox-indeterminate': node?.indeterminate()
+        }"
+        @click.stop="toggleCheckbox"
+      >
+        <span class="checkbox-icon">
+          <span v-if="node?.indeterminate()" class="checkbox-indeterminate-icon">−</span>
+          <span v-else-if="node?.checked()" class="checkbox-check-icon">✓</span>
+        </span>
+      </span>
+
       <!-- Expand/collapse toggle -->
       <span
         v-if="node?.hasChildren?.()"
@@ -46,12 +63,38 @@ const props = defineProps<Props>()
 // Inject the reactive activeElement from TreeRoot
 const activeElement = inject<Ref<Node | null>>('activeElement')
 
+// Inject dragDrop from TreeRoot
+const dragDrop = inject<ReturnType<typeof import('@/composables').useDragDrop>>('dragDrop')
+
 const isActiveElement = computed(() => {
   return activeElement?.value === props.node
 })
 
+const isVisible = computed(() => {
+  // Check if node has a visible state set to false
+  const visibleState = props.node?.state('visible')
+  // If visible state is explicitly set to false, hide the node
+  if (visibleState === false) {
+    return false
+  }
+  // Otherwise, show the node (default is visible)
+  return true
+})
+
+const showCheckbox = computed(() => {
+  return props.node?.tree?.options.checkbox === true
+})
+
 const toggleExpand = () => {
   props.node?.toggleExpand()
+}
+
+const toggleCheckbox = () => {
+  if (props.node?.checked()) {
+    props.node?.uncheck()
+  } else {
+    props.node?.check()
+  }
 }
 
 const handleClick = (event: MouseEvent) => {
@@ -62,6 +105,13 @@ const handleClick = (event: MouseEvent) => {
     props.node.select(extendSelection)
     // Also set as active element for keyboard navigation
     props.node.focus()
+  }
+}
+
+const handleMouseDown = (event: MouseEvent) => {
+  // Start dragging if drag & drop is enabled
+  if (dragDrop && props.node) {
+    dragDrop.startDragging(props.node, event)
   }
 }
 </script>
@@ -135,9 +185,89 @@ const handleClick = (event: MouseEvent) => {
   color: #333;  /* Ensure dark text color regardless of color scheme */
 }
 
+.tree-checkbox {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  cursor: pointer;
+  border: 2px solid #666;
+  border-radius: 3px;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.tree-checkbox:hover {
+  border-color: #2196f3;
+}
+
+.tree-checkbox-checked {
+  background-color: #2196f3;
+  border-color: #2196f3;
+}
+
+.tree-checkbox-indeterminate {
+  background-color: #2196f3;
+  border-color: #2196f3;
+}
+
+.checkbox-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.checkbox-check-icon {
+  display: block;
+}
+
+.checkbox-indeterminate-icon {
+  display: block;
+  font-size: 16px;
+  line-height: 12px;
+}
+
 .tree-children {
   list-style: none;
   margin: 0;
   padding-left: 20px;
+}
+
+/* Drag & Drop styles */
+.tree-node.drag-above > .tree-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #2196f3;
+}
+
+.tree-node.drag-below > .tree-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #2196f3;
+}
+
+.tree-node.drag-on > .tree-content {
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+  border-radius: 3px;
+}
+
+.tree-content {
+  position: relative;
 }
 </style>
