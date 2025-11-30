@@ -40,6 +40,10 @@ const activeElement = ref<Node | null>(null)
 // Provide activeElement to child components
 provide('activeElement', activeElement)
 
+// Initialize keyboard navigation composable (must be called during setup)
+// It will only attach event listeners after the element is available
+const keyboardNav = useKeyboardNav(tree, rootEl)
+
 // Initialize tree
 onMounted(() => {
   tree.value = new Tree(props.options)
@@ -61,13 +65,6 @@ onMounted(() => {
     },
     enumerable: true,
     configurable: true
-  })
-
-  // Initialize keyboard navigation if enabled and root element is available
-  nextTick(() => {
-    if (tree.value?.options.keyboardNavigation !== false && rootEl.value) {
-      useKeyboardNav(tree, rootEl.value)
-    }
   })
 })
 

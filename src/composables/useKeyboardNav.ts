@@ -6,7 +6,7 @@ import type { Node } from '../core/Node'
  * Keyboard navigation composable for tree component
  * Handles arrow keys, Enter, Space for navigation and interaction
  */
-export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: HTMLElement) {
+export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: Ref<HTMLElement | null>) {
   /**
    * Navigate to previous visible node
    */
@@ -135,15 +135,15 @@ export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: HTMLElement)
 
   // Set up event listener when mounted
   onMounted(() => {
-    if (rootElement) {
-      rootElement.addEventListener('keydown', handleKeyDown, true)
+    if (rootElement.value) {
+      rootElement.value.addEventListener('keydown', handleKeyDown, true)
     }
   })
 
   // Clean up event listener when unmounted
   onUnmounted(() => {
-    if (rootElement) {
-      rootElement.removeEventListener('keydown', handleKeyDown, true)
+    if (rootElement.value) {
+      rootElement.value.removeEventListener('keydown', handleKeyDown, true)
     }
   })
 

@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { useKeyboardNav } from '../../../src/composables/useKeyboardNav.ts'
 import { Tree } from '../../../src/core/Tree'
 import type { TreeOptions, TreeNodeData } from '../../../src/types'
 
 describe('useKeyboardNav', () => {
   let tree: Tree
-  let rootEl: HTMLDivElement
+  let rootEl: Ref<HTMLDivElement | null>
   const sampleData: TreeNodeData[] = [
     {
       id: '1',
@@ -30,8 +30,9 @@ describe('useKeyboardNav', () => {
     const options: TreeOptions = {}
     tree = new Tree(options)
     tree.setModel(sampleData)
-    rootEl = document.createElement('div')
-    document.body.appendChild(rootEl)
+    const el = document.createElement('div')
+    document.body.appendChild(el)
+    rootEl = ref(el)
   })
 
   describe('ArrowDown - Navigate down', () => {
