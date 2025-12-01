@@ -14,7 +14,7 @@
 import { ref, watch, onMounted, onUnmounted, nextTick, provide } from 'vue'
 import { Tree } from '@/core/Tree'
 import TreeNode from './TreeNode.vue'
-import { useKeyboardNav, useDragDrop } from '@/composables'
+import { useKeyboardNav, useDragDrop, useAsyncData } from '@/composables'
 import type { TreeNodeData, TreeOptions } from '@/types'
 import type { Node } from '@/core/Node'
 
@@ -50,6 +50,9 @@ const dragDrop = useDragDrop(tree, rootEl)
 // Provide dragDrop to child components
 provide('dragDrop', dragDrop)
 
+// Async data loader (will be initialized in onMounted after tree is created)
+let asyncData: ReturnType<typeof useAsyncData> | null = null
+
 // Initialize tree
 onMounted(() => {
   tree.value = new Tree(props.options)
@@ -57,6 +60,16 @@ onMounted(() => {
   if (props.data && props.data.length > 0) {
     tree.value.setModel(props.data)
   }
+
+  // Initialize async data loading
+  asyncData = useAsyncData(tree.value, props.options)
+
+  // Listen for node expansion events to trigger async loading
+  tree.value.$on('node:expanded', async (node: Node) => {
+    if (node.isBatch && asyncData) {
+      await asyncData.loadChildren(node)
+    }
+  })
 
   // Sync tree.activeElement with reactive ref
   // Override the activeElement setter to trigger reactivity

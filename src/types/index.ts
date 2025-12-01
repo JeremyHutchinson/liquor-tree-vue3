@@ -35,6 +35,7 @@ export interface NodeState {
   dragging: boolean
   draggable: boolean
   dropable: boolean
+  loading: boolean
 }
 
 /**
@@ -54,7 +55,8 @@ export interface TreeOptions {
   dnd?: boolean | DragAndDropOptions
 
   // Data
-  fetchData?: (node: Node) => Promise<TreeNodeData[]>
+  fetchData?: string | ((node: Node) => Promise<TreeNodeData[]>)
+  onFetchError?: (error: Error, node: Node) => void
 
   // Display
   filter?: FilterOptions

@@ -25,9 +25,16 @@
         </span>
       </span>
 
-      <!-- Expand/collapse toggle -->
+      <!-- Expand/collapse toggle or loading spinner -->
       <span
-        v-if="node?.hasChildren?.()"
+        v-if="node?.state('loading')"
+        class="tree-loading"
+        title="Loading..."
+      >
+        ⏳
+      </span>
+      <span
+        v-else-if="node?.hasChildren() || node?.isBatch"
         class="tree-arrow"
         :class="{ 'tree-arrow-expanded': node?.expanded() }"
         @click.stop="toggleExpand"
@@ -178,6 +185,26 @@ const handleMouseDown = (event: MouseEvent) => {
   width: 16px;
   height: 16px;
   margin-right: 4px;
+}
+
+.tree-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  font-size: 16px;
+  line-height: 16px;
+  text-align: center;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .tree-text {

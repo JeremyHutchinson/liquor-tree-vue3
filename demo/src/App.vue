@@ -113,6 +113,21 @@
           </div>
           <TreeRoot :data="dndData" :options="dndOptions" />
         </div>
+
+        <!-- Async Data Tab -->
+        <div v-if="activeTab === 'async'" class="demo-section">
+          <h2>Async Data Loading</h2>
+          <p class="info-text">
+            Click the expand arrow on nodes with a ⏳ to load their children asynchronously.
+            The hourglass icon indicates a node that will fetch data when expanded.
+          </p>
+
+          <h3>Simulated API Fetch</h3>
+          <p class="info-text">
+            These nodes simulate API calls with a 1-second delay. Watch the loading spinner appear while data is being fetched!
+          </p>
+          <TreeRoot :data="asyncData" :options="asyncOptions" />
+        </div>
       </div>
     </div>
   </div>
@@ -132,7 +147,8 @@ const tabs = [
   { id: 'filter', label: 'Filter' },
   { id: 'sorting', label: 'Sorting' },
   { id: 'keyboard', label: 'Keyboard' },
-  { id: 'dragdrop', label: 'Drag & Drop' }
+  { id: 'dragdrop', label: 'Drag & Drop' },
+  { id: 'async', label: 'Async Data' }
 ]
 
 // Filter state
@@ -411,6 +427,113 @@ const dndOptions: TreeOptions = {
       // Return true to allow the drop
       return true
     }
+  }
+}
+
+// Async Data
+const asyncData: TreeNodeData[] = [
+  {
+    text: 'Products',
+    id: 'products',
+    isBatch: true
+  },
+  {
+    text: 'Services',
+    id: 'services',
+    isBatch: true
+  },
+  {
+    text: 'Support',
+    id: 'support',
+    isBatch: true
+  }
+]
+
+// Mock data for async loading
+const mockAsyncData: Record<string, TreeNodeData[]> = {
+  products: [
+    {
+      text: 'Electronics',
+      id: 'electronics',
+      isBatch: true
+    },
+    {
+      text: 'Clothing',
+      id: 'clothing',
+      isBatch: true
+    },
+    {
+      text: 'Books',
+      id: 'books',
+      children: [
+        { text: 'Fiction' },
+        { text: 'Non-Fiction' },
+        { text: 'Technical' }
+      ]
+    }
+  ],
+  services: [
+    {
+      text: 'Consulting',
+      id: 'consulting',
+      children: [
+        { text: 'Strategy' },
+        { text: 'Implementation' }
+      ]
+    },
+    {
+      text: 'Training',
+      id: 'training',
+      children: [
+        { text: 'Online Courses' },
+        { text: 'Workshops' }
+      ]
+    }
+  ],
+  support: [
+    {
+      text: 'Documentation',
+      children: [
+        { text: 'Getting Started' },
+        { text: 'API Reference' },
+        { text: 'Examples' }
+      ]
+    },
+    {
+      text: 'Community',
+      children: [
+        { text: 'Forums' },
+        { text: 'Discord' },
+        { text: 'Stack Overflow' }
+      ]
+    }
+  ],
+  electronics: [
+    { text: 'Laptops' },
+    { text: 'Smartphones' },
+    { text: 'Tablets' }
+  ],
+  clothing: [
+    { text: 'Shirts' },
+    { text: 'Pants' },
+    { text: 'Shoes' }
+  ]
+}
+
+// Async options with fetchData function
+const asyncOptions: TreeOptions = {
+  fetchData: async (node) => {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
+    // Get mock data for this node
+    const children = mockAsyncData[node.id as string] || []
+
+    // Return the children data
+    return children
+  },
+  onFetchError: (error, node) => {
+    console.error(`Error loading children for ${node.text}:`, error)
   }
 }
 </script>

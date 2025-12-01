@@ -35,10 +35,14 @@ export class Node {
     this.isBatch = item.isBatch || false
     this.isEditing = false
 
-    // Store all data including text
+    // Store all data including text and any additional properties
+    // Extract known properties to exclude from data
+    const { id, state, children, isBatch, text, data, ...additionalProps } = item
+
     this.data = {
-      ...item.data,
-      text: item.text
+      ...data,
+      ...additionalProps,
+      text: text
     }
   }
 
