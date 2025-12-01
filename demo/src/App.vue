@@ -200,13 +200,69 @@
             </template>
           </TreeRoot>
         </div>
+
+        <!-- Events Tab -->
+        <div v-if="activeTab === 'events'" class="demo-section">
+          <h2>Events System</h2>
+          <p class="info-text">
+            All tree interactions emit events. Monitor the event log below to see events as they happen.
+            Try selecting nodes, checking boxes, expanding/collapsing, and dragging.
+          </p>
+
+          <div class="events-container">
+            <div class="events-log">
+              <h3>Event Log</h3>
+              <button @click="clearEventLog" class="clear-button" style="margin-bottom: 0.5rem;">Clear Log</button>
+              <div class="log-entries">
+                <div v-for="(event, index) in eventLog" :key="index" class="log-entry" :class="`log-${event.type}`">
+                  <span class="log-time">{{ event.time }}</span>
+                  <span class="log-name">{{ event.name }}</span>
+                  <span class="log-details">{{ event.details }}</span>
+                </div>
+                <div v-if="eventLog.length === 0" class="log-empty">
+                  No events yet. Interact with the tree to see events.
+                </div>
+              </div>
+            </div>
+
+            <div class="events-tree">
+              <h3>Interactive Tree</h3>
+              <p style="font-size: 0.9em; color: #666; margin-bottom: 1rem;">
+                Click, check, expand, and drag nodes to trigger events.
+              </p>
+              <TreeRoot ref="eventsTreeRef" :data="eventsData" :options="eventsOptions" />
+            </div>
+          </div>
+
+          <div class="events-docs">
+            <h3>Available Events</h3>
+            <ul class="events-list">
+              <li><strong>node:selected</strong> - Node is selected</li>
+              <li><strong>node:unselected</strong> - Node is unselected</li>
+              <li><strong>node:checked</strong> - Node checkbox is checked</li>
+              <li><strong>node:unchecked</strong> - Node checkbox is unchecked</li>
+              <li><strong>node:expanded</strong> - Node is expanded</li>
+              <li><strong>node:collapsed</strong> - Node is collapsed</li>
+              <li><strong>node:focused</strong> - Node receives focus</li>
+              <li><strong>node:text:changed</strong> - Node text changes</li>
+              <li><strong>node:data:changed</strong> - Node data changes</li>
+              <li><strong>node:removed</strong> - Node is removed</li>
+              <li><strong>node:dragstart</strong> - Dragging starts</li>
+              <li><strong>node:dropped</strong> - Node is dropped</li>
+              <li><strong>tree:filtered</strong> - Tree is filtered</li>
+            </ul>
+            <p style="margin-top: 1rem;">
+              See <a href="https://github.com/your-repo/liquor-tree-vue3/blob/main/EVENTS.md" target="_blank" style="color: #2196f3;">EVENTS.md</a> for full documentation.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import TreeRoot from '../../src/components/TreeRoot.vue'
 import type { TreeNodeData, TreeOptions } from '../../src/types'
 
@@ -221,7 +277,8 @@ const tabs = [
   { id: 'keyboard', label: 'Keyboard' },
   { id: 'dragdrop', label: 'Drag & Drop' },
   { id: 'async', label: 'Async Data' },
-  { id: 'custom', label: 'Custom Rendering' }
+  { id: 'custom', label: 'Custom Rendering' },
+  { id: 'events', label: 'Events' }
 ]
 
 // Filter state
@@ -705,6 +762,121 @@ const customData3: TreeNodeData[] = [
     ]
   }
 ]
+
+// Events Demo
+const eventsTreeRef = ref<InstanceType<typeof TreeRoot> | null>(null)
+const eventLog = ref<Array<{ time: string, name: string, details: string, type: string }>>([])
+
+const eventsData: TreeNodeData[] = [
+  {
+    text: 'Documents',
+    state: { expanded: true },
+    children: [
+      { text: 'Work' },
+      { text: 'Personal' }
+    ]
+  },
+  {
+    text: 'Photos',
+    state: { expanded: true },
+    children: [
+      { text: '2023' },
+      { text: '2024' }
+    ]
+  },
+  {
+    text: 'Downloads'
+  }
+]
+
+const eventsOptions: TreeOptions = {
+  checkbox: true,
+  dnd: { enabled: true }
+}
+
+const logEvent = (name: string, details: string, type: string = 'info') => {
+  const time = new Date().toLocaleTimeString()
+  eventLog.value.unshift({ time, name, details, type })
+
+  // Keep only last 50 events
+  if (eventLog.value.length > 50) {
+    eventLog.value = eventLog.value.slice(0, 50)
+  }
+}
+
+const clearEventLog = () => {
+  eventLog.value = []
+}
+
+// Set up event listeners for events demo
+onMounted(() => {
+  if (eventsTreeRef.value?.tree) {
+    const tree = eventsTreeRef.value.tree
+
+    // Selection events
+    tree.$on('node:selected', (node) => {
+      logEvent('node:selected', `Selected "${node.text}"`, 'selection')
+    })
+
+    tree.$on('node:unselected', (node) => {
+      logEvent('node:unselected', `Unselected "${node.text}"`, 'selection')
+    })
+
+    // Checkbox events
+    tree.$on('node:checked', (node) => {
+      logEvent('node:checked', `Checked "${node.text}"`, 'checkbox')
+    })
+
+    tree.$on('node:unchecked', (node) => {
+      logEvent('node:unchecked', `Unchecked "${node.text}"`, 'checkbox')
+    })
+
+    // State events
+    tree.$on('node:expanded', (node) => {
+      logEvent('node:expanded', `Expanded "${node.text}"`, 'state')
+    })
+
+    tree.$on('node:collapsed', (node) => {
+      logEvent('node:collapsed', `Collapsed "${node.text}"`, 'state')
+    })
+
+    tree.$on('node:focused', (node) => {
+      logEvent('node:focused', `Focused "${node.text}"`, 'state')
+    })
+
+    // Data events
+    tree.$on('node:text:changed', (node, newText, oldText) => {
+      logEvent('node:text:changed', `"${oldText}" → "${newText}"`, 'data')
+    })
+
+    tree.$on('node:data:changed', (node, data) => {
+      logEvent('node:data:changed', `Data updated for "${node.text}"`, 'data')
+    })
+
+    // Structure events
+    tree.$on('node:removed', (node) => {
+      logEvent('node:removed', `Removed "${node.text}"`, 'structure')
+    })
+
+    // Drag & Drop events
+    tree.$on('node:dragstart', (node) => {
+      logEvent('node:dragstart', `Started dragging "${node.text}"`, 'dnd')
+    })
+
+    tree.$on('node:dropped', (dragNode, targetNode, placement) => {
+      logEvent('node:dropped', `"${dragNode.text}" dropped ${placement} "${targetNode.text}"`, 'dnd')
+    })
+
+    // Filter events
+    tree.$on('tree:filtered', (matches, query) => {
+      if (query) {
+        logEvent('tree:filtered', `${matches.length} matches for "${query}"`, 'filter')
+      } else {
+        logEvent('tree:filtered', 'Filter cleared', 'filter')
+      }
+    })
+  }
+})
 </script>
 
 <style scoped>
@@ -897,5 +1069,150 @@ h3 {
   border-radius: 3px;
   font-size: 0.9rem;
   color: #333;
+}
+
+/* Events Demo Styles */
+.events-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.events-log,
+.events-tree {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.events-log h3,
+.events-tree h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  border-bottom: 2px solid #2196f3;
+  padding-bottom: 0.5rem;
+}
+
+.log-entries {
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.log-entry {
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+  border-left: 3px solid #ccc;
+  background: white;
+  border-radius: 2px;
+}
+
+.log-entry.log-selection {
+  border-left-color: #2196f3;
+  background: #e3f2fd;
+}
+
+.log-entry.log-checkbox {
+  border-left-color: #4caf50;
+  background: #e8f5e9;
+}
+
+.log-entry.log-state {
+  border-left-color: #ff9800;
+  background: #fff3e0;
+}
+
+.log-entry.log-data {
+  border-left-color: #9c27b0;
+  background: #f3e5f5;
+}
+
+.log-entry.log-structure {
+  border-left-color: #f44336;
+  background: #ffebee;
+}
+
+.log-entry.log-dnd {
+  border-left-color: #00bcd4;
+  background: #e0f7fa;
+}
+
+.log-entry.log-filter {
+  border-left-color: #ffc107;
+  background: #fff8e1;
+}
+
+.log-time {
+  color: #666;
+  margin-right: 0.5rem;
+  font-size: 0.8em;
+}
+
+.log-name {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-right: 0.5rem;
+}
+
+.log-details {
+  color: #555;
+}
+
+.log-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+.events-docs {
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.events-docs h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  border-bottom: 2px solid #42b983;
+  padding-bottom: 0.5rem;
+}
+
+.events-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.5rem;
+}
+
+.events-list li {
+  padding: 0.5rem;
+  background: white;
+  border-radius: 3px;
+  border: 1px solid #e0e0e0;
+  font-size: 0.9rem;
+}
+
+.events-list strong {
+  color: #2196f3;
+  font-family: monospace;
+}
+
+@media (max-width: 768px) {
+  .events-container {
+    grid-template-columns: 1fr;
+  }
+
+  .events-list {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
