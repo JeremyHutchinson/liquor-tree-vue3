@@ -5,7 +5,12 @@
         v-for="node in tree.model"
         :key="node.id"
         :node="node"
-      />
+      >
+        <!-- Forward the default slot to TreeNode -->
+        <template v-if="$slots.default" #default="slotProps">
+          <slot v-bind="slotProps" />
+        </template>
+      </TreeNode>
     </ul>
   </div>
 </template>

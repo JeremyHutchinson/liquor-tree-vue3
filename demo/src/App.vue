@@ -128,6 +128,78 @@
           </p>
           <TreeRoot :data="asyncData" :options="asyncOptions" />
         </div>
+
+        <!-- Custom Rendering Tab -->
+        <div v-if="activeTab === 'custom'" class="demo-section">
+          <h2>Custom Rendering with Scoped Slots</h2>
+          <p class="info-text">
+            Use scoped slots to completely customize how nodes are rendered. Access the full node object
+            with all its data, methods, and state.
+          </p>
+
+          <h3>Example 1: Icons and Badges</h3>
+          <p class="info-text">Custom rendering with emoji icons and count badges.</p>
+          <TreeRoot :data="customData1">
+            <template #default="{ node }">
+              <span style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.2em;">{{ node.data?.icon || '📄' }}</span>
+                <span>{{ node.text }}</span>
+                <span
+                  v-if="node.data?.count !== undefined"
+                  style="background: #2196f3; color: white; padding: 0.1rem 0.4rem; border-radius: 10px; font-size: 0.75em;"
+                >
+                  {{ node.data.count }}
+                </span>
+              </span>
+            </template>
+          </TreeRoot>
+
+          <h3 style="margin-top: 2rem;">Example 2: Rich Content</h3>
+          <p class="info-text">Complex HTML with multiple interactive elements.</p>
+          <TreeRoot :data="customData2">
+            <template #default="{ node }">
+              <div style="display: flex; align-items: center; gap: 0.75rem; width: 100%;">
+                <span
+                  :style="{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    background: node.data?.status === 'online' ? '#4caf50' :
+                               node.data?.status === 'away' ? '#ff9800' : '#9e9e9e'
+                  }"
+                ></span>
+                <strong>{{ node.text }}</strong>
+                <span v-if="node.data?.role" style="color: #666; font-size: 0.85em;">
+                  ({{ node.data.role }})
+                </span>
+                <span v-if="node.data?.email" style="color: #999; font-size: 0.8em; margin-left: auto;">
+                  {{ node.data.email }}
+                </span>
+              </div>
+            </template>
+          </TreeRoot>
+
+          <h3 style="margin-top: 2rem;">Example 3: Conditional Styling</h3>
+          <p class="info-text">Apply different styles based on node properties and state.</p>
+          <TreeRoot :data="customData3" :options="{ checkbox: true }">
+            <template #default="{ node }">
+              <span
+                :style="{
+                  fontWeight: node.data?.priority === 'high' ? 'bold' : 'normal',
+                  color: node.data?.completed ? '#999' :
+                         node.data?.priority === 'high' ? '#f44336' :
+                         node.data?.priority === 'medium' ? '#ff9800' : '#333',
+                  textDecoration: node.data?.completed ? 'line-through' : 'none'
+                }"
+              >
+                {{ node.text }}
+                <span v-if="node.data?.dueDate" style="font-size: 0.85em; margin-left: 0.5rem;">
+                  📅 {{ node.data.dueDate }}
+                </span>
+              </span>
+            </template>
+          </TreeRoot>
+        </div>
       </div>
     </div>
   </div>
@@ -148,7 +220,8 @@ const tabs = [
   { id: 'sorting', label: 'Sorting' },
   { id: 'keyboard', label: 'Keyboard' },
   { id: 'dragdrop', label: 'Drag & Drop' },
-  { id: 'async', label: 'Async Data' }
+  { id: 'async', label: 'Async Data' },
+  { id: 'custom', label: 'Custom Rendering' }
 ]
 
 // Filter state
@@ -536,6 +609,102 @@ const asyncOptions: TreeOptions = {
     console.error(`Error loading children for ${node.text}:`, error)
   }
 }
+
+// Custom Rendering Data
+const customData1: TreeNodeData[] = [
+  {
+    text: 'Inbox',
+    data: { icon: '📥', count: 12 },
+    state: { expanded: true },
+    children: [
+      { text: 'Work', data: { icon: '💼', count: 5 } },
+      { text: 'Personal', data: { icon: '👤', count: 7 } }
+    ]
+  },
+  {
+    text: 'Sent',
+    data: { icon: '📤', count: 42 },
+    state: { expanded: true },
+    children: [
+      { text: 'Recent', data: { icon: '🕐', count: 8 } },
+      { text: 'Archive', data: { icon: '📦', count: 34 } }
+    ]
+  },
+  {
+    text: 'Drafts',
+    data: { icon: '✏️', count: 3 }
+  }
+]
+
+const customData2: TreeNodeData[] = [
+  {
+    text: 'Engineering Team',
+    state: { expanded: true },
+    children: [
+      {
+        text: 'Alice Johnson',
+        data: { status: 'online', role: 'Frontend Dev', email: 'alice@example.com' }
+      },
+      {
+        text: 'Bob Smith',
+        data: { status: 'away', role: 'Backend Dev', email: 'bob@example.com' }
+      },
+      {
+        text: 'Carol Williams',
+        data: { status: 'online', role: 'DevOps', email: 'carol@example.com' }
+      }
+    ]
+  },
+  {
+    text: 'Design Team',
+    state: { expanded: true },
+    children: [
+      {
+        text: 'David Chen',
+        data: { status: 'offline', role: 'UI Designer', email: 'david@example.com' }
+      },
+      {
+        text: 'Eve Martinez',
+        data: { status: 'online', role: 'UX Designer', email: 'eve@example.com' }
+      }
+    ]
+  }
+]
+
+const customData3: TreeNodeData[] = [
+  {
+    text: 'Sprint Tasks',
+    state: { expanded: true },
+    children: [
+      {
+        text: 'Implement user authentication',
+        data: { priority: 'high', dueDate: 'Dec 1', completed: false }
+      },
+      {
+        text: 'Fix responsive layout',
+        data: { priority: 'medium', dueDate: 'Dec 3', completed: false }
+      },
+      {
+        text: 'Update documentation',
+        data: { priority: 'low', dueDate: 'Dec 5', completed: true }
+      }
+    ]
+  },
+  {
+    text: 'Backlog',
+    state: { expanded: true },
+    children: [
+      {
+        text: 'Add dark mode support',
+        data: { priority: 'medium', completed: false }
+      },
+      {
+        text: 'Performance optimization',
+        data: { priority: 'high', completed: false }
+      }
+    ]
+  }
+]
 </script>
 
 <style scoped>

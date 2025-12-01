@@ -43,7 +43,12 @@
       </span>
       <span v-else class="tree-arrow-placeholder"></span>
 
-      <span class="tree-text">{{ node?.text || 'N/A' }}</span>
+      <!-- Custom content via slot or default text rendering -->
+      <span class="tree-text">
+        <slot :node="node">
+          {{ node?.text || 'N/A' }}
+        </slot>
+      </span>
     </div>
 
     <!-- Recursively render children (only when expanded) -->
@@ -52,7 +57,12 @@
         v-for="child in node.children"
         :key="child.id"
         :node="child"
-      />
+      >
+        <!-- Forward the slot to children recursively -->
+        <template v-if="$slots.default" #default="slotProps">
+          <slot v-bind="slotProps" />
+        </template>
+      </TreeNode>
     </ul>
   </li>
 </template>
