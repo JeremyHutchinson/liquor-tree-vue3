@@ -6,13 +6,41 @@
       also sorts all nested children, not just the top level.
     </p>
     <div class="sort-controls">
-      <button class="sort-button" @click="sortAscending(false)">Sort A-Z</button>
-      <button class="sort-button" @click="sortDescending(false)">Sort Z-A</button>
-      <button class="sort-button" @click="sortAscending(true)">Deep Sort A-Z</button>
-      <button class="sort-button" @click="sortDescending(true)">Deep Sort Z-A</button>
-      <button class="sort-button reset-button" @click="resetSort">Reset</button>
+      <button
+        class="sort-button"
+        @click="sortAscending(false)"
+      >
+        Sort A-Z
+      </button>
+      <button
+        class="sort-button"
+        @click="sortDescending(false)"
+      >
+        Sort Z-A
+      </button>
+      <button
+        class="sort-button"
+        @click="sortAscending(true)"
+      >
+        Deep Sort A-Z
+      </button>
+      <button
+        class="sort-button"
+        @click="sortDescending(true)"
+      >
+        Deep Sort Z-A
+      </button>
+      <button
+        class="sort-button reset-button"
+        @click="resetSort"
+      >
+        Reset
+      </button>
     </div>
-    <TreeRoot ref="sortTreeRef" :data="sortData" />
+    <TreeRoot
+      ref="sortTreeRef"
+      :data="sortData"
+    />
   </div>
 </template>
 

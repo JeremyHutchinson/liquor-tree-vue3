@@ -10,7 +10,10 @@
       <li><kbd>→</kbd> — Expand node or move to first child</li>
       <li><kbd>Enter</kbd> / <kbd>Space</kbd> — Toggle checkbox (if enabled)</li>
     </ul>
-    <TreeRoot :data="nestedData" :options="treeOptions" />
+    <TreeRoot
+      :data="nestedData"
+      :options="treeOptions"
+    />
   </div>
 </template>
 

@@ -31,8 +31,14 @@
         @click.stop="toggleCheckbox"
       >
         <span class="checkbox-icon">
-          <span v-if="node?.indeterminate()" class="checkbox-indeterminate-icon">−</span>
-          <span v-else-if="node?.checked()" class="checkbox-check-icon">✓</span>
+          <span
+            v-if="node?.indeterminate()"
+            class="checkbox-indeterminate-icon"
+          >−</span>
+          <span
+            v-else-if="node?.checked()"
+            class="checkbox-check-icon"
+          >✓</span>
         </span>
       </span>
 
@@ -52,7 +58,10 @@
       >
         ▶
       </span>
-      <span v-else class="tree-arrow-placeholder"></span>
+      <span
+        v-else
+        class="tree-arrow-placeholder"
+      />
 
       <!-- Inline editor when editing, otherwise slot/text -->
       <input
@@ -65,8 +74,11 @@
         @blur="commitEdit"
         @click.stop
         @mousedown.stop
-      />
-      <span v-else class="tree-text">
+      >
+      <span
+        v-else
+        class="tree-text"
+      >
         <slot :node="node">
           {{ node?.text || 'N/A' }}
         </slot>
@@ -74,14 +86,21 @@
     </div>
 
     <!-- Recursively render children (only when expanded) -->
-    <ul v-if="node?.hasChildren?.() && node?.expanded()" class="tree-children" role="group">
+    <ul
+      v-if="node?.hasChildren?.() && node?.expanded()"
+      class="tree-children"
+      role="group"
+    >
       <TreeNode
         v-for="child in node.children"
         :key="child.id"
         :node="child"
       >
         <!-- Forward the slot to children recursively -->
-        <template v-if="$slots.default" #default="slotProps">
+        <template
+          v-if="$slots.default"
+          #default="slotProps"
+        >
           <slot v-bind="slotProps" />
         </template>
       </TreeNode>

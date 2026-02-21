@@ -1,5 +1,8 @@
 <template>
-  <div class="status-box" :class="`status-box--${variant}`">
+  <div
+    class="status-box"
+    :class="`status-box--${variant}`"
+  >
     <strong>Last Action:</strong> {{ message || empty }}
   </div>
 </template>
@@ -10,6 +13,7 @@ withDefaults(defineProps<{
   empty?: string
   variant?: 'green' | 'blue'
 }>(), {
+  message: '',
   empty: 'No changes yet',
   variant: 'blue'
 })

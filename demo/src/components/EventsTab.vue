@@ -7,14 +7,21 @@
     </p>
 
     <div class="events-container">
-      <EventLog :entries="eventLog" @clear="clearEventLog" />
+      <EventLog
+        :entries="eventLog"
+        @clear="clearEventLog"
+      />
 
       <div class="events-tree">
         <h3>Interactive Tree</h3>
         <p class="events-tree__hint">
           Click, check, expand, and drag nodes to trigger events.
         </p>
-        <TreeRoot ref="eventsTreeRef" :data="eventsData" :options="eventsOptions" />
+        <TreeRoot
+          ref="eventsTreeRef"
+          :data="eventsData"
+          :options="eventsOptions"
+        />
       </div>
     </div>
 
@@ -36,7 +43,10 @@
         <li><strong>tree:filtered</strong> — Tree is filtered</li>
       </ul>
       <p style="margin-top: 1rem;">
-        See <a href="https://github.com/your-repo/liquor-tree-vue3/blob/main/EVENTS.md" target="_blank">EVENTS.md</a> for full documentation.
+        See <a
+          href="https://github.com/your-repo/liquor-tree-vue3/blob/main/EVENTS.md"
+          target="_blank"
+        >EVENTS.md</a> for full documentation.
       </p>
     </div>
   </div>

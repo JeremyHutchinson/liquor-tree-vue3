@@ -7,42 +7,64 @@
     </p>
 
     <h3>Example 1: Icons and Badges</h3>
-    <p class="info-text">Custom rendering with emoji icons and count badges.</p>
+    <p class="info-text">
+      Custom rendering with emoji icons and count badges.
+    </p>
     <TreeRoot :data="customData1">
       <template #default="{ node }">
         <span class="icon-node">
           <span class="icon-node__icon">{{ node.data?.icon || '📄' }}</span>
           <span>{{ node.text }}</span>
-          <span v-if="node.data?.count !== undefined" class="badge">
+          <span
+            v-if="node.data?.count !== undefined"
+            class="badge"
+          >
             {{ node.data.count }}
           </span>
         </span>
       </template>
     </TreeRoot>
 
-    <h3 style="margin-top: 2rem;">Example 2: Rich Content</h3>
-    <p class="info-text">Complex HTML with multiple interactive elements.</p>
+    <h3 style="margin-top: 2rem;">
+      Example 2: Rich Content
+    </h3>
+    <p class="info-text">
+      Complex HTML with multiple interactive elements.
+    </p>
     <TreeRoot :data="customData2">
       <template #default="{ node }">
         <div class="rich-node">
           <span
             class="status-dot"
             :class="`status-dot--${node.data?.status || 'offline'}`"
-          ></span>
+          />
           <strong>{{ node.text }}</strong>
-          <span v-if="node.data?.role" class="rich-node__role">
+          <span
+            v-if="node.data?.role"
+            class="rich-node__role"
+          >
             ({{ node.data.role }})
           </span>
-          <span v-if="node.data?.email" class="rich-node__email">
+          <span
+            v-if="node.data?.email"
+            class="rich-node__email"
+          >
             {{ node.data.email }}
           </span>
         </div>
       </template>
     </TreeRoot>
 
-    <h3 style="margin-top: 2rem;">Example 3: Conditional Styling</h3>
-    <p class="info-text">Apply different styles based on node properties and state.</p>
-    <TreeRoot :data="customData3" :options="{ checkbox: true }">
+    <h3 style="margin-top: 2rem;">
+      Example 3: Conditional Styling
+    </h3>
+    <p class="info-text">
+      Apply different styles based on node properties and state.
+    </p>
+    <TreeRoot
+      :data="customData3"
+      :options="{ checkbox: true }"
+    >
       <template #default="{ node }">
         <span
           :class="[
@@ -52,7 +74,10 @@
           ]"
         >
           {{ node.text }}
-          <span v-if="node.data?.dueDate" class="priority-node__due">
+          <span
+            v-if="node.data?.dueDate"
+            class="priority-node__due"
+          >
             📅 {{ node.data.dueDate }}
           </span>
         </span>

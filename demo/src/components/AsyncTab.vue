@@ -10,7 +10,10 @@
     <p class="info-text">
       These nodes simulate API calls with a 1-second delay. Watch the loading spinner appear while data is being fetched!
     </p>
-    <TreeRoot :data="asyncData" :options="asyncOptions" />
+    <TreeRoot
+      :data="asyncData"
+      :options="asyncOptions"
+    />
   </div>
 </template>
 

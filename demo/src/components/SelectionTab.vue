@@ -3,15 +3,25 @@
     <h2>Selection Examples</h2>
 
     <h3>Single Selection</h3>
-    <p class="info-text">Click a node to select it. Selecting another node will deselect the previous one.</p>
-    <TreeRoot :data="nestedData" :options="treeOptions" />
+    <p class="info-text">
+      Click a node to select it. Selecting another node will deselect the previous one.
+    </p>
+    <TreeRoot
+      :data="nestedData"
+      :options="treeOptions"
+    />
 
-    <h3 style="margin-top: 2rem;">Multiple Selection</h3>
+    <h3 style="margin-top: 2rem;">
+      Multiple Selection
+    </h3>
     <p class="info-text">
       <strong>Cmd/Ctrl + click</strong> to add individual nodes to the selection.
       <strong>Shift + click</strong> to select a contiguous range of nodes between your last click and the current one.
     </p>
-    <TreeRoot :data="multiSelectData" :options="multiSelectOptions" />
+    <TreeRoot
+      :data="multiSelectData"
+      :options="multiSelectOptions"
+    />
   </div>
 </template>
 

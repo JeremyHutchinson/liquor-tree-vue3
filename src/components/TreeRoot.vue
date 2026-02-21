@@ -1,13 +1,24 @@
 <template>
-  <div ref="rootEl" class="liquor-tree" tabindex="0">
-    <ul v-if="tree" class="tree-root" role="tree">
+  <div
+    ref="rootEl"
+    class="liquor-tree"
+    tabindex="0"
+  >
+    <ul
+      v-if="tree"
+      class="tree-root"
+      role="tree"
+    >
       <TreeNode
         v-for="node in tree.model"
         :key="node.id"
         :node="node"
       >
         <!-- Forward the default slot to TreeNode -->
-        <template v-if="$slots.default" #default="slotProps">
+        <template
+          v-if="$slots.default"
+          #default="slotProps"
+        >
           <slot v-bind="slotProps" />
         </template>
       </TreeNode>

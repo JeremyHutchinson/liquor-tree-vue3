@@ -2,7 +2,12 @@
   <div class="event-log">
     <div class="event-log__header">
       <h3>Event Log</h3>
-      <button class="clear-button" @click="$emit('clear')">Clear Log</button>
+      <button
+        class="clear-button"
+        @click="$emit('clear')"
+      >
+        Clear Log
+      </button>
     </div>
     <div class="log-entries">
       <div
@@ -15,7 +20,10 @@
         <span class="log-name">{{ entry.name }}</span>
         <span class="log-details">{{ entry.details }}</span>
       </div>
-      <div v-if="entries.length === 0" class="log-empty">
+      <div
+        v-if="entries.length === 0"
+        class="log-empty"
+      >
         No events yet. Interact with the tree to see events.
       </div>
     </div>

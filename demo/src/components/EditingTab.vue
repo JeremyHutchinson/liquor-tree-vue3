@@ -7,9 +7,17 @@
       You can also press <kbd>F2</kbd> to start editing the focused node via keyboard.
     </p>
 
-    <StatusBox :message="editingStatus" empty="No changes yet" variant="green" />
+    <StatusBox
+      :message="editingStatus"
+      empty="No changes yet"
+      variant="green"
+    />
 
-    <TreeRoot ref="editingTreeRef" :data="editingData" :options="editingOptions" />
+    <TreeRoot
+      ref="editingTreeRef"
+      :data="editingData"
+      :options="editingOptions"
+    />
   </div>
 </template>
 

@@ -1,7 +1,9 @@
 <template>
   <div class="demo-section">
     <h2>Basic Tree Example</h2>
-    <p class="info-text">Simple tree with expand/collapse functionality.</p>
+    <p class="info-text">
+      Simple tree with expand/collapse functionality.
+    </p>
     <TreeRoot :data="basicData" />
   </div>
 </template>

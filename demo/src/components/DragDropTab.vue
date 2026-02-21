@@ -5,8 +5,15 @@
       Click and drag nodes to reorder them. Drag to the top/bottom third of a node to insert before/after,
       or to the middle third to make it a child.
     </p>
-    <StatusBox :message="dndStatus" empty="No actions yet" variant="blue" />
-    <TreeRoot :data="dndData" :options="dndOptions" />
+    <StatusBox
+      :message="dndStatus"
+      empty="No actions yet"
+      variant="blue"
+    />
+    <TreeRoot
+      :data="dndData"
+      :options="dndOptions"
+    />
   </div>
 </template>
 

@@ -6,7 +6,10 @@
       checking a parent automatically checks all children. Parent checkboxes show
       an indeterminate state (−) when some but not all children are checked.
     </p>
-    <TreeRoot :data="checkboxData" :options="checkboxOptions" />
+    <TreeRoot
+      :data="checkboxData"
+      :options="checkboxOptions"
+    />
   </div>
 </template>
 

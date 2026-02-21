@@ -12,10 +12,20 @@
         placeholder="Type to filter tree..."
         class="filter-input"
         @input="handleFilter"
-      />
-      <button v-if="filterQuery" class="clear-button" @click="clearFilter">Clear</button>
+      >
+      <button
+        v-if="filterQuery"
+        class="clear-button"
+        @click="clearFilter"
+      >
+        Clear
+      </button>
     </div>
-    <TreeRoot ref="filterTreeRef" :data="filterData" :options="filterOptions" />
+    <TreeRoot
+      ref="filterTreeRef"
+      :data="filterData"
+      :options="filterOptions"
+    />
   </div>
 </template>
 
