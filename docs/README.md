@@ -5,19 +5,19 @@ A feature-rich Vue 3 tree component library with support for selection, checkbox
 ## Installation
 
 ```bash
-npm install liquor-tree-vue3
+npm install liquor-tree
 ```
 
 ## Minimal Usage
 
 ```vue
 <template>
-  <TreeRoot :data="items" />
+  <LiquorTree :data="items" />
 </template>
 
 <script setup lang="ts">
-import TreeRoot from 'liquor-tree-vue3'
-import type { TreeNodeData } from 'liquor-tree-vue3'
+import { LiquorTree } from 'liquor-tree'
+import type { TreeNodeData } from 'liquor-tree'
 
 const items: TreeNodeData[] = [
   { text: 'Item 1' },
