@@ -324,4 +324,106 @@ describe('useKeyboardNav', () => {
       expect(preventDefaultSpy).not.toHaveBeenCalled()
     })
   })
+
+  describe('Editing via keyboard', () => {
+    let editTree: Tree
+
+    beforeEach(() => {
+      editTree = new Tree({ editing: true })
+      editTree.setModel(sampleData)
+    })
+
+    it('F2 should start editing the focused node', () => {
+      const treeRef = ref(editTree)
+      const { handleKeyDown } = useKeyboardNav(treeRef, rootEl)
+
+      const node1 = editTree.find('1')!
+      editTree.activeElement = node1
+
+      const event = new KeyboardEvent('keydown', { key: 'F2' })
+      Object.defineProperty(event, 'preventDefault', { value: vi.fn() })
+
+      handleKeyDown(event)
+
+      expect(node1.isEditing).toBe(true)
+    })
+
+    it('Escape should cancel editing and leave text unchanged', () => {
+      const treeRef = ref(editTree)
+      const { handleKeyDown } = useKeyboardNav(treeRef, rootEl)
+
+      const node1 = editTree.find('1')!
+      node1.startEditing()
+      editTree.activeElement = node1
+
+      const event = new KeyboardEvent('keydown', { key: 'Escape' })
+      const preventDefaultSpy = vi.fn()
+      const stopPropagationSpy = vi.fn()
+      Object.defineProperty(event, 'preventDefault', { value: preventDefaultSpy })
+      Object.defineProperty(event, 'stopPropagation', { value: stopPropagationSpy })
+
+      handleKeyDown(event)
+
+      expect(node1.isEditing).toBe(false)
+      expect(node1.text).toBe('Node 1')
+      expect(preventDefaultSpy).toHaveBeenCalled()
+    })
+
+    it('Escape should preventDefault and stopPropagation during editing', () => {
+      const treeRef = ref(editTree)
+      const { handleKeyDown } = useKeyboardNav(treeRef, rootEl)
+
+      const node1 = editTree.find('1')!
+      node1.startEditing()
+      editTree.activeElement = node1
+
+      const event = new KeyboardEvent('keydown', { key: 'Escape' })
+      const preventDefaultSpy = vi.fn()
+      const stopPropagationSpy = vi.fn()
+      Object.defineProperty(event, 'preventDefault', { value: preventDefaultSpy })
+      Object.defineProperty(event, 'stopPropagation', { value: stopPropagationSpy })
+
+      handleKeyDown(event)
+
+      expect(preventDefaultSpy).toHaveBeenCalled()
+      expect(stopPropagationSpy).toHaveBeenCalled()
+    })
+
+    it('arrow keys should not navigate while node is editing', () => {
+      const treeRef = ref(editTree)
+      const { handleKeyDown } = useKeyboardNav(treeRef, rootEl)
+
+      const node1 = editTree.find('1')!
+      node1.startEditing()
+      editTree.activeElement = node1
+
+      const event = new KeyboardEvent('keydown', { key: 'ArrowDown' })
+      const preventDefaultSpy = vi.fn()
+      Object.defineProperty(event, 'preventDefault', { value: preventDefaultSpy })
+
+      handleKeyDown(event)
+
+      // Navigation should be blocked — active element should remain node1
+      expect(editTree.activeElement?.id).toBe('1')
+      // preventDefault should NOT be called (editing intercept returns early)
+      expect(preventDefaultSpy).not.toHaveBeenCalled()
+    })
+
+    it('F2 should not start editing on a non-editable node', () => {
+      const nonEditTree = new Tree({ editing: false })
+      nonEditTree.setModel(sampleData)
+      const treeRef = ref(nonEditTree)
+      const { handleKeyDown } = useKeyboardNav(treeRef, rootEl)
+
+      const node1 = nonEditTree.find('1')!
+      nonEditTree.activeElement = node1
+
+      const event = new KeyboardEvent('keydown', { key: 'F2' })
+      Object.defineProperty(event, 'preventDefault', { value: vi.fn() })
+
+      handleKeyDown(event)
+
+      expect(node1.isEditing).toBe(false)
+    })
+  })
 })

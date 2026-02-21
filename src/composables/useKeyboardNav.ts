@@ -96,17 +96,18 @@ export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: Ref<HTMLElem
       return
     }
 
-    // Don't handle keys when node is being edited
+    // Don't handle navigation keys when node is being edited
     if (node.isEditing) {
       if (event.key === 'Escape') {
-        // TODO: Implement stop editing
-        // node.stopEditing(false)
+        event.preventDefault()
+        event.stopPropagation()
+        node.stopEditing(false)
       }
       return
     }
 
     // Handle navigation and action keys
-    const handledKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter']
+    const handledKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'F2']
 
     if (handledKeys.includes(event.key)) {
       event.preventDefault()
@@ -128,6 +129,9 @@ export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: Ref<HTMLElem
         case ' ':
         case 'Enter':
           checkNode(node)
+          break
+        case 'F2':
+          node.startEditing()
           break
       }
     }

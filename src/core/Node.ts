@@ -222,10 +222,14 @@ export class Node {
   }
 
   /**
-   * Convenience method: check if node is editable
+   * Convenience method: check if node is editable.
+   * Per-node state('editable') takes precedence; falls back to tree.options.editing.
    */
   editable(): boolean {
-    return !this.state('disabled') && this.state('editable') === true
+    if (this.state('disabled')) return false
+    const nodeState = this.state('editable')
+    if (nodeState !== undefined) return nodeState === true
+    return this.tree.options.editing === true
   }
 
   /**
@@ -247,6 +251,33 @@ export class Node {
    */
   selectRange(): void {
     this.tree.selectRange(this)
+  }
+
+  /**
+   * Begin inline editing of node text
+   */
+  startEditing(): void {
+    if (!this.editable()) {
+      return
+    }
+    this.isEditing = true
+    this.$emit('editing')
+  }
+
+  /**
+   * Finish inline editing
+   * @param save - if true, newText is committed; if false, edit is cancelled
+   * @param newText - the new text value (only used when save is true)
+   */
+  stopEditing(save: boolean, newText?: string): void {
+    if (!this.isEditing) {
+      return
+    }
+    this.isEditing = false
+    if (save && newText !== undefined && newText !== this.text) {
+      this.text = newText
+    }
+    this.$emit('editing:stopped')
   }
 
   /**

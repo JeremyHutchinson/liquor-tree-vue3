@@ -34,7 +34,10 @@
           <TreeRoot :data="nestedData" :options="treeOptions" />
 
           <h3 style="margin-top: 2rem;">Multiple Selection</h3>
-          <p class="info-text">Hold Cmd (Mac) or Ctrl (Windows/Linux) and click to select multiple nodes.</p>
+          <p class="info-text">
+            <strong>Cmd/Ctrl + click</strong> to add individual nodes to the selection.
+            <strong>Shift + click</strong> to select a contiguous range of nodes between your last click and the current one.
+          </p>
           <TreeRoot :data="multiSelectData" :options="multiSelectOptions" />
         </div>
 
@@ -99,6 +102,22 @@
             <li><kbd>Enter</kbd> / <kbd>Space</kbd> - Toggle checkbox (if enabled)</li>
           </ul>
           <TreeRoot :data="nestedData" :options="treeOptions" />
+        </div>
+
+        <!-- Editing Tab -->
+        <div v-if="activeTab === 'editing'" class="demo-section">
+          <h2>Inline Node Editing</h2>
+          <p class="info-text">
+            <strong>Double-click</strong> any node to edit its text inline.
+            Press <kbd>Enter</kbd> or click away to save. Press <kbd>Escape</kbd> to cancel.
+            You can also press <kbd>F2</kbd> to start editing the focused node via keyboard.
+          </p>
+
+          <div class="editing-status">
+            <strong>Last Change:</strong> {{ editingStatus || 'No changes yet' }}
+          </div>
+
+          <TreeRoot ref="editingTreeRef" :data="editingData" :options="editingOptions" />
         </div>
 
         <!-- Drag & Drop Tab -->
@@ -275,6 +294,7 @@ const tabs = [
   { id: 'filter', label: 'Filter' },
   { id: 'sorting', label: 'Sorting' },
   { id: 'keyboard', label: 'Keyboard' },
+  { id: 'editing', label: 'Editing' },
   { id: 'dragdrop', label: 'Drag & Drop' },
   { id: 'async', label: 'Async Data' },
   { id: 'custom', label: 'Custom Rendering' },
@@ -321,11 +341,82 @@ const originalSortData: TreeNodeData[] = [
 ]
 const sortData = ref<TreeNodeData[]>(JSON.parse(JSON.stringify(originalSortData)))
 
-// Basic tree data
+// Basic tree data - multi-level to demonstrate expand/collapse
 const basicData: TreeNodeData[] = [
-  { text: 'Node 1' },
-  { text: 'Node 2' },
-  { text: 'Node 3' }
+  {
+    text: 'Design System',
+    state: { expanded: true },
+    children: [
+      {
+        text: 'Components',
+        state: { expanded: true },
+        children: [
+          {
+            text: 'Inputs',
+            children: [
+              { text: 'Button' },
+              { text: 'Text Field' },
+              { text: 'Checkbox' },
+              { text: 'Radio' }
+            ]
+          },
+          {
+            text: 'Layout',
+            children: [
+              { text: 'Grid' },
+              { text: 'Stack' },
+              { text: 'Divider' }
+            ]
+          },
+          {
+            text: 'Feedback',
+            children: [
+              { text: 'Alert' },
+              { text: 'Toast' },
+              { text: 'Progress' }
+            ]
+          }
+        ]
+      },
+      {
+        text: 'Tokens',
+        children: [
+          { text: 'Colors' },
+          { text: 'Typography' },
+          { text: 'Spacing' },
+          { text: 'Shadows' }
+        ]
+      },
+      {
+        text: 'Guidelines',
+        children: [
+          { text: 'Accessibility' },
+          { text: 'Motion' },
+          { text: 'Writing' }
+        ]
+      }
+    ]
+  },
+  {
+    text: 'Platform',
+    children: [
+      {
+        text: 'Web',
+        children: [
+          { text: 'React' },
+          { text: 'Vue' },
+          { text: 'Angular' }
+        ]
+      },
+      {
+        text: 'Mobile',
+        children: [
+          { text: 'iOS' },
+          { text: 'Android' }
+        ]
+      }
+    ]
+  }
 ]
 
 // Nested tree data
@@ -366,17 +457,84 @@ const treeOptions: TreeOptions = {
 
 // Multi-select tree data
 const multiSelectData: TreeNodeData[] = [
-  { text: 'Item 1' },
-  { text: 'Item 2' },
-  { text: 'Item 3' },
-  { text: 'Item 4' },
-  { text: 'Item 5' }
+  {
+    text: 'Frontend',
+    state: { expanded: true },
+    children: [
+      { text: 'React' },
+      { text: 'Vue' },
+      { text: 'Angular' },
+      { text: 'Svelte' }
+    ]
+  },
+  {
+    text: 'Backend',
+    state: { expanded: true },
+    children: [
+      { text: 'Node.js' },
+      { text: 'Django' },
+      { text: 'Rails' },
+      { text: 'Spring' }
+    ]
+  },
+  {
+    text: 'Mobile',
+    state: { expanded: true },
+    children: [
+      { text: 'React Native' },
+      { text: 'Flutter' },
+      { text: 'Swift' }
+    ]
+  }
 ]
 
 // Multi-select tree options
 const multiSelectOptions: TreeOptions = {
   multiple: true,
   checkbox: false
+}
+
+// Editing demo
+const editingTreeRef = ref<InstanceType<typeof TreeRoot> | null>(null)
+const editingStatus = ref('')
+const editingData: TreeNodeData[] = [
+  {
+    text: 'Project Alpha',
+    state: { expanded: true },
+    children: [
+      {
+        text: 'Planning',
+        state: { expanded: true },
+        children: [
+          { text: 'Requirements' },
+          { text: 'Architecture' },
+          { text: 'Timeline' }
+        ]
+      },
+      {
+        text: 'Development',
+        state: { expanded: true },
+        children: [
+          { text: 'Frontend' },
+          { text: 'Backend' },
+          { text: 'Database' }
+        ]
+      }
+    ]
+  },
+  {
+    text: 'Project Beta',
+    state: { expanded: true },
+    children: [
+      { text: 'Research' },
+      { text: 'Prototype' },
+      { text: 'Review' }
+    ]
+  }
+]
+
+const editingOptions: TreeOptions = {
+  editing: true
 }
 
 // Checkbox tree data
@@ -808,6 +966,15 @@ const clearEventLog = () => {
   eventLog.value = []
 }
 
+// Set up event listeners for editing demo
+onMounted(() => {
+  if (editingTreeRef.value?.tree) {
+    editingTreeRef.value.tree.$on('node:text:changed', (_node, newText, oldText) => {
+      editingStatus.value = `Renamed "${oldText}" → "${newText}"`
+    })
+  }
+})
+
 // Set up event listeners for events demo
 onMounted(() => {
   if (eventsTreeRef.value?.tree) {
@@ -1059,6 +1226,16 @@ h3 {
   font-family: monospace;
   font-size: 0.9em;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.editing-status {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  background-color: #f5f5f5;
+  border-left: 3px solid #42b983;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  color: #333;
 }
 
 .dnd-status {

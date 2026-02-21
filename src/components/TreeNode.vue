@@ -17,6 +17,7 @@
         'tree-content-focused': isActiveElement
       }"
       @click="handleClick"
+      @dblclick="handleDblClick"
       @mousedown="handleMouseDown"
     >
       <!-- Checkbox (if enabled) -->
@@ -53,8 +54,19 @@
       </span>
       <span v-else class="tree-arrow-placeholder"></span>
 
-      <!-- Custom content via slot or default text rendering -->
-      <span class="tree-text">
+      <!-- Inline editor when editing, otherwise slot/text -->
+      <input
+        v-if="node?.isEditing"
+        ref="editInputRef"
+        class="tree-edit-input"
+        :value="node?.text"
+        @keydown.enter.stop="commitEdit"
+        @keydown.escape.stop="cancelEdit"
+        @blur="commitEdit"
+        @click.stop
+        @mousedown.stop
+      />
+      <span v-else class="tree-text">
         <slot :node="node">
           {{ node?.text || 'N/A' }}
         </slot>
@@ -78,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, type Ref } from 'vue'
+import { computed, inject, ref, watch, nextTick, type Ref } from 'vue'
 import type { Node } from '@/core/Node'
 
 interface Props {
@@ -161,6 +173,45 @@ const handleMouseDown = (event: MouseEvent) => {
   if (dragDrop && props.node) {
     dragDrop.startDragging(props.node, event)
   }
+}
+
+const handleDblClick = () => {
+  props.node?.startEditing()
+}
+
+// Ref for the inline edit input
+const editInputRef = ref<HTMLInputElement | null>(null)
+
+// Captured tree root element — used to restore focus when editing ends
+let capturedTreeRoot: HTMLElement | null = null
+
+// Auto-focus the input when editing begins; restore tree focus when it ends
+watch(
+  () => props.node?.isEditing,
+  (editing) => {
+    if (editing) {
+      nextTick(() => {
+        // Capture the .liquor-tree root now, while the input is still in the DOM
+        capturedTreeRoot = editInputRef.value?.closest('.liquor-tree') as HTMLElement | null
+        editInputRef.value?.focus()
+        editInputRef.value?.select()
+      })
+    } else {
+      // Return focus to the tree container so keyboard nav keeps working.
+      // This runs whether editing ended via Enter, Escape, or blur.
+      nextTick(() => capturedTreeRoot?.focus())
+    }
+  }
+)
+
+const commitEdit = () => {
+  if (props.node?.isEditing) {
+    props.node.stopEditing(true, editInputRef.value?.value)
+  }
+}
+
+const cancelEdit = () => {
+  props.node?.stopEditing(false)
 }
 </script>
 
@@ -300,6 +351,19 @@ const handleMouseDown = (event: MouseEvent) => {
   display: block;
   font-size: 16px;
   line-height: 12px;
+}
+
+.tree-edit-input {
+  flex: 1;
+  padding: 1px 4px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid #2196f3;
+  border-radius: 3px;
+  outline: none;
+  background: white;
+  color: #333;
+  min-width: 0;
 }
 
 .tree-children {
