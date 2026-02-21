@@ -93,7 +93,7 @@ const options: TreeOptions = {
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `multiple` | `boolean` | `false` | Allow multiple nodes to be selected simultaneously |
-| `parentSelect` | `boolean` | `false` | Clicking a parent selects all its children |
+| `parentSelect` | `boolean` | `true` | Clicking a parent selects all its children |
 | `checkOnSelect` | `boolean` | `false` | Selecting a node also checks its checkbox |
 
 ## Events
@@ -108,24 +108,36 @@ const options: TreeOptions = {
 Use a template ref to access the underlying `tree` instance and subscribe to events via `$on`.
 
 ```vue
+<template>
+  <LiquorTree ref="treeRef" :data="items" />
+</template>
+
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { LiquorTree } from 'liquor-tree'
-import type { Node } from 'liquor-tree'
+import type { TreeNodeData } from 'liquor-tree'
+
+const items: TreeNodeData[] = [
+  { text: 'Item 1' },
+  { text: 'Item 2', children: [{ text: 'Item 2.1' }] }
+]
 
 const treeRef = ref<InstanceType<typeof LiquorTree> | null>(null)
 
 onMounted(() => {
-  treeRef.value?.tree.$on('node:selected', (node: Node) => {
-    console.log('Selected:', node.text)
-  })
-  treeRef.value?.tree.$on('node:unselected', (node: Node) => {
-    console.log('Unselected:', node.text)
+  const tree = treeRef.value?.tree
+  if (!tree) return
+
+  const onSelected = (node) => console.log('Selected:', node.text)
+  const onUnselected = (node) => console.log('Unselected:', node.text)
+
+  tree.$on('node:selected', onSelected)
+  tree.$on('node:unselected', onUnselected)
+
+  onUnmounted(() => {
+    tree.$off('node:selected', onSelected)
+    tree.$off('node:unselected', onUnselected)
   })
 })
 </script>
-
-<template>
-  <LiquorTree ref="treeRef" :data="treeData" :options="options" />
-</template>
 ```
