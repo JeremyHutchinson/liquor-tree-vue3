@@ -9,7 +9,7 @@ Keyboard navigation is enabled by default and requires no additional configurati
 | `ArrowUp` | Move focus to the previous visible node |
 | `ArrowDown` | Move focus to the next visible node |
 | `ArrowLeft` | Collapse the focused node if expanded, or move focus to its parent |
-| `ArrowRight` | Expand the focused node if collapsed, or move focus to its first child |
+| `ArrowRight` | Expand the focused node if it is collapsed and has children; or move focus to its first child if the node is already expanded; does nothing on leaf nodes |
 | `Enter` | Toggle the checkbox on the focused node (requires `checkbox: true`) |
 | `Space` | Toggle the checkbox on the focused node (requires `checkbox: true`) |
 | `F2` | Start inline editing on the focused node (requires `editing: true`) |
