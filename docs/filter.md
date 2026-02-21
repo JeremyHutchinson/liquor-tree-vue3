@@ -114,8 +114,8 @@ const clearFilter = () => {
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `tree.filter` | `(query: string \| RegExp \| ((node: Node) => boolean)) => void` | Apply a filter — shows only matching nodes and their ancestors |
-| `tree.clearFilter` | `() => void` | Remove the active filter and show all nodes |
+| `tree.filter` | `(query: string) => Node[]` | Apply a filter — shows only matching nodes and their ancestors; returns the matched nodes |
+| `tree.clearFilter` | `() => Node[]` | Remove the active filter, show all nodes, and return an empty array |
 
 ## Options
 
