@@ -60,7 +60,6 @@ describe('useKeyboardNav', () => {
 
       const node1 = tree.find('1')!
       const node2 = tree.find('2')!
-      const node3 = tree.find('3')!
 
       tree.activeElement = node1
       node2.state('disabled', true)
@@ -112,7 +111,6 @@ describe('useKeyboardNav', () => {
       const treeRef = ref(tree)
       const { handleKeyDown } = useKeyboardNav(treeRef, rootEl)
 
-      const node1 = tree.find('1')!
       const node2 = tree.find('2')!
       const node3 = tree.find('3')!
 

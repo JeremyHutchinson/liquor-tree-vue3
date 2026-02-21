@@ -128,9 +128,9 @@ describe('Selection', () => {
     it('should provide index and selection in callback', () => {
       const selection = new Selection(tree, nodes)
       let lastIndex = -1
-      let lastSelection: Selection | null = null
+      let lastSelection: Node[] | null = null
 
-      selection.forEach((node, index, sel) => {
+      selection.forEach((_node, index, sel) => {
         lastIndex = index
         lastSelection = sel
       })

@@ -1,7 +1,6 @@
 // TypeScript type definitions for liquor-tree
 
 import type { Node } from '../core/Node'
-import type { Tree } from '../core/Tree'
 
 /**
  * Input data format for tree nodes

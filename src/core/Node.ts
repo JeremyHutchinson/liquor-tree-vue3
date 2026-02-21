@@ -243,6 +243,13 @@ export class Node {
   }
 
   /**
+   * Select a range of nodes from the anchor to this node (Shift+click)
+   */
+  selectRange(): void {
+    this.tree.selectRange(this)
+  }
+
+  /**
    * Toggle selection state
    */
   toggleSelect(): void {

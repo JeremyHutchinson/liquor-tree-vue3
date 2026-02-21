@@ -845,11 +845,11 @@ onMounted(() => {
     })
 
     // Data events
-    tree.$on('node:text:changed', (node, newText, oldText) => {
+    tree.$on('node:text:changed', (_node, newText, oldText) => {
       logEvent('node:text:changed', `"${oldText}" → "${newText}"`, 'data')
     })
 
-    tree.$on('node:data:changed', (node, data) => {
+    tree.$on('node:data:changed', (node, _data) => {
       logEvent('node:data:changed', `Data updated for "${node.text}"`, 'data')
     })
 

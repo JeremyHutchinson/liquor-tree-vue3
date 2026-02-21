@@ -1,5 +1,5 @@
 import { Node } from './Node'
-import type { TreeOptions, TreeNodeData, FilterFunction } from '../types'
+import type { TreeOptions, TreeNodeData } from '../types'
 
 type EventHandler = (...args: any[]) => void
 
@@ -13,8 +13,10 @@ export class Tree {
   selectedNodes: Node[]
   checkedNodes: Node[]
   activeElement: Node | null
+  anchorNode: Node | null
 
-  private eventHandlers: Map<string, EventHandler[]>
+  /** @internal */
+  eventHandlers: Map<string, EventHandler[]>
 
   constructor(options: TreeOptions = {}) {
     this.options = {
@@ -41,6 +43,7 @@ export class Tree {
     this.selectedNodes = []
     this.checkedNodes = []
     this.activeElement = null
+    this.anchorNode = null
     this.eventHandlers = new Map()
   }
 
@@ -84,7 +87,8 @@ export class Tree {
   /**
    * Parse data array into Node instances
    */
-  private parseData(data: TreeNodeData[], parent: Node | null): Node[] {
+  /** @internal */
+  parseData(data: TreeNodeData[], parent: Node | null): Node[] {
     return data.map((item) => {
       const node = new Node(this, item)
       node.parent = parent
@@ -159,6 +163,8 @@ export class Tree {
     const shouldClearPrevious = !(this.options.multiple && extendSelection)
     if (shouldClearPrevious) {
       this.unselectAll()
+      // Update anchor node for range selection
+      this.anchorNode = node
     }
 
     node.state('selected', true)
@@ -168,6 +174,48 @@ export class Tree {
     }
 
     this.$emit('node:selected', node)
+  }
+
+  /**
+   * Select a range of nodes between anchor and target (Shift+click)
+   * Only works when multiple selection is enabled
+   */
+  selectRange(targetNode: Node): void {
+    if (!this.options.multiple || targetNode.state('disabled')) {
+      return
+    }
+
+    const anchor = this.anchorNode
+    if (!anchor) {
+      // No anchor set, fall back to normal select
+      this.select(targetNode)
+      return
+    }
+
+    const visibleNodes = this.getVisibleNodes()
+    const anchorIndex = visibleNodes.indexOf(anchor)
+    const targetIndex = visibleNodes.indexOf(targetNode)
+
+    if (anchorIndex === -1 || targetIndex === -1) {
+      return
+    }
+
+    const start = Math.min(anchorIndex, targetIndex)
+    const end = Math.max(anchorIndex, targetIndex)
+
+    this.unselectAll()
+
+    for (let i = start; i <= end; i++) {
+      const node = visibleNodes[i]
+      if (!node.state('disabled')) {
+        node.state('selected', true)
+        if (!this.selectedNodes.includes(node)) {
+          this.selectedNodes.push(node)
+        }
+      }
+    }
+
+    this.$emit('node:selected', targetNode)
   }
 
   /**
@@ -272,7 +320,8 @@ export class Tree {
   /**
    * Update parent node's checked/indeterminate state based on children
    */
-  private updateParentState(node: Node): void {
+  /** @internal */
+  updateParentState(node: Node): void {
     if (!node.parent) {
       return
     }
@@ -376,7 +425,7 @@ export class Tree {
     const matcher = this.options.filter?.matcher || ((q: string, n: Node) =>
       n.text.toLowerCase().includes(q.toLowerCase())
     )
-    const { showChildren, plainList } = this.options.filter || {}
+    const { showChildren } = this.options.filter || {}
 
     // Mark all nodes as not visible initially
     this.recurseDown((node) => {
@@ -489,7 +538,8 @@ export class Tree {
    * Get all visible nodes in tree order
    * (nodes that are expanded and not filtered out)
    */
-  private getVisibleNodes(): Node[] {
+  /** @internal */
+  getVisibleNodes(): Node[] {
     const visibleNodes: Node[] = []
 
     const collectVisible = (nodes: Node[]) => {

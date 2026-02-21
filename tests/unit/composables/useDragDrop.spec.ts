@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { useDragDrop, DropPosition } from '../../../src/composables/useDragDrop'
 import { Tree } from '../../../src/core/Tree'
-import { Node } from '../../../src/core/Node'
 import type { TreeNodeData, TreeOptions } from '../../../src/types'
 
 describe('useDragDrop', () => {
   let tree: Tree
-  let treeRef: ReturnType<typeof ref<Tree | null>>
-  let rootEl: ReturnType<typeof ref<HTMLElement | null>>
+  let treeRef: Ref<Tree | null>
+  let rootEl: Ref<HTMLElement | null>
   let mockElement: HTMLElement
 
   beforeEach(() => {
@@ -38,9 +37,9 @@ describe('useDragDrop', () => {
     ]
     tree.setModel(data)
 
-    treeRef = ref(tree)
+    treeRef = ref<Tree | null>(tree)
     mockElement = document.createElement('div')
-    rootEl = ref(mockElement)
+    rootEl = ref<HTMLElement | null>(mockElement)
   })
 
   describe('DropPosition', () => {

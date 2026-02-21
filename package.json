@@ -1,8 +1,9 @@
 {
   "name": "liquor-tree",
   "description": "A Vue.js tree component.",
-  "version": "0.3.0-alpha.1",
+  "version": "0.4.0",
   "author": "Kostiantyn <phlyze@gmail.com>",
+  "contributors": ["Jeremy Hutchinson <tiberiusc@gmail.com>"],
   "type": "module",
   "scripts": {
     "dev": "vite demo",

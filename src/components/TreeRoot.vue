@@ -1,6 +1,6 @@
 <template>
   <div ref="rootEl" class="liquor-tree" tabindex="0">
-    <ul v-if="tree" class="tree-root">
+    <ul v-if="tree" class="tree-root" role="tree">
       <TreeNode
         v-for="node in tree.model"
         :key="node.id"
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, nextTick, provide } from 'vue'
+import { ref, watch, onMounted, onUnmounted, provide } from 'vue'
 import { Tree } from '@/core/Tree'
 import TreeNode from './TreeNode.vue'
 import { useKeyboardNav, useDragDrop, useAsyncData } from '@/composables'
@@ -47,7 +47,7 @@ provide('activeElement', activeElement)
 
 // Initialize keyboard navigation composable (must be called during setup)
 // It will only attach event listeners after the element is available
-const keyboardNav = useKeyboardNav(tree, rootEl)
+useKeyboardNav(tree, rootEl)
 
 // Initialize drag & drop composable
 const dragDrop = useDragDrop(tree, rootEl)

@@ -1,5 +1,15 @@
 <template>
-  <li v-if="isVisible" class="tree-node" :data-id="node?.id">
+  <li
+    v-if="isVisible"
+    class="tree-node"
+    :data-id="node?.id"
+    role="treeitem"
+    :aria-level="ariaLevel"
+    :aria-expanded="ariaExpanded"
+    :aria-selected="node?.selected()"
+    :aria-disabled="node?.disabled() || undefined"
+    :aria-checked="ariaChecked"
+  >
     <div
       class="tree-content"
       :class="{
@@ -52,7 +62,7 @@
     </div>
 
     <!-- Recursively render children (only when expanded) -->
-    <ul v-if="node?.hasChildren?.() && node?.expanded()" class="tree-children">
+    <ul v-if="node?.hasChildren?.() && node?.expanded()" class="tree-children" role="group">
       <TreeNode
         v-for="child in node.children"
         :key="child.id"
@@ -77,6 +87,10 @@ interface Props {
 
 const props = defineProps<Props>()
 
+defineSlots<{
+  default?: (props: { node: Node }) => unknown
+}>()
+
 // Inject the reactive activeElement from TreeRoot
 const activeElement = inject<Ref<Node | null>>('activeElement')
 
@@ -85,6 +99,19 @@ const dragDrop = inject<ReturnType<typeof import('@/composables').useDragDrop>>(
 
 const isActiveElement = computed(() => {
   return activeElement?.value === props.node
+})
+
+const ariaLevel = computed(() => (props.node?.depth ?? 0) + 1)
+
+const ariaExpanded = computed(() => {
+  if (!props.node?.hasChildren() && !props.node?.isBatch) return undefined
+  return props.node?.expanded()
+})
+
+const ariaChecked = computed(() => {
+  if (!props.node?.tree?.options.checkbox) return undefined
+  if (props.node?.indeterminate()) return 'mixed'
+  return props.node?.checked()
 })
 
 const isVisible = computed(() => {
@@ -115,14 +142,18 @@ const toggleCheckbox = () => {
 }
 
 const handleClick = (event: MouseEvent) => {
-  // Select the node on click
-  if (props.node) {
-    // Check if Cmd (Mac) or Ctrl (Windows/Linux) is pressed for multi-select
+  if (!props.node) return
+
+  if (event.shiftKey && props.node.tree?.options.multiple) {
+    // Shift+click: range selection
+    props.node.tree.selectRange(props.node)
+  } else {
+    // Normal click or Cmd/Ctrl+click for multi-select
     const extendSelection = event.metaKey || event.ctrlKey
     props.node.select(extendSelection)
-    // Also set as active element for keyboard navigation
-    props.node.focus()
   }
+  // Set as active element for keyboard navigation
+  props.node.focus()
 }
 
 const handleMouseDown = (event: MouseEvent) => {

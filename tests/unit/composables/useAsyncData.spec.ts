@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ref } from 'vue'
 import { useAsyncData } from '../../../src/composables/useAsyncData'
 import { Tree } from '../../../src/core/Tree'
 import { Node } from '../../../src/core/Node'
@@ -11,7 +10,7 @@ describe('useAsyncData', () => {
 
   beforeEach(() => {
     options = {}
-    tree = new Tree([], options)
+    tree = new Tree(options)
   })
 
   describe('fetchData as function', () => {
@@ -96,9 +95,10 @@ describe('useAsyncData', () => {
 
   describe('fetchData as URL template string', () => {
     it('should replace placeholders in URL template with node properties', async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      const mockFetch = vi.fn().mockResolvedValue({
         json: () => Promise.resolve([{ text: 'Child 1' }])
       })
+      vi.stubGlobal('fetch', mockFetch)
 
       options.fetchData = '/api/data-{id}.json?text={text}'
       const { loadChildren } = useAsyncData(tree, options)
@@ -111,19 +111,21 @@ describe('useAsyncData', () => {
 
       await loadChildren(parentNode)
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/data-123.json?text=Parent Node')
+      expect(mockFetch).toHaveBeenCalledWith('/api/data-123.json?text=Parent Node')
       expect(parentNode.children.length).toBe(1)
     })
 
     it('should handle multiple placeholder replacements', async () => {
-      global.fetch = vi.fn().mockResolvedValue({
+      const mockFetch = vi.fn().mockResolvedValue({
         json: () => Promise.resolve([])
       })
+      vi.stubGlobal('fetch', mockFetch)
 
       options.fetchData = '/api/{category}/{id}/items?filter={filter}'
       const { loadChildren } = useAsyncData(tree, options)
 
       const parentNode = new Node(tree, {
+        text: 'Node 1',
         id: 'node-1',
         category: 'products',
         filter: 'active',
@@ -132,19 +134,20 @@ describe('useAsyncData', () => {
 
       await loadChildren(parentNode)
 
-      expect(global.fetch).toHaveBeenCalledWith('/api/products/node-1/items?filter=active')
+      expect(mockFetch).toHaveBeenCalledWith('/api/products/node-1/items?filter=active')
     })
 
     it('should handle fetch errors with URL template', async () => {
       const error = new Error('404 Not Found')
-      global.fetch = vi.fn().mockRejectedValue(error)
+      const mockFetch = vi.fn().mockRejectedValue(error)
+      vi.stubGlobal('fetch', mockFetch)
       const onFetchError = vi.fn()
 
       options.fetchData = '/api/data-{id}.json'
       options.onFetchError = onFetchError
       const { loadChildren } = useAsyncData(tree, options)
 
-      const parentNode = new Node(tree, { id: 999, isBatch: true })
+      const parentNode = new Node(tree, { text: 'Parent', id: 999, isBatch: true })
 
       await loadChildren(parentNode)
 

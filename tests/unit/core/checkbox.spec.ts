@@ -118,7 +118,6 @@ describe('Checkbox State Management', () => {
     it('should set parent to indeterminate when some children are checked', () => {
       const parent = tree.find('1')!
       const child1 = tree.find('1-1')!
-      const child2 = tree.find('1-2')!
 
       child1.check()
 
