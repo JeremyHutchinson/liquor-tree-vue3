@@ -159,8 +159,8 @@ export type TreeEventName =
   | 'node:removed'
   | 'node:text:changed'
   | 'node:data:changed'
-  | 'node:editing:start'
-  | 'node:editing:stop'
+  | 'node:editing'
+  | 'node:editing:stopped'
 
 /**
  * Re-export core classes for convenience

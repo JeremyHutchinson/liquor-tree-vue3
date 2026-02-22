@@ -105,5 +105,5 @@ onUnmounted(() => {
 | Event | Payload | Description |
 |-------|---------|-------------|
 | `node:text:changed` | `(node: Node, newText: string, oldText: string)` | Fires after edited text is saved |
-| `node:editing:start` | `node: Node` | Fires when inline editing begins |
-| `node:editing:stop` | `node: Node` | Fires when editing ends (save or cancel) |
+| `node:editing` | `node: Node` | Fires when inline editing begins |
+| `node:editing:stopped` | `node: Node` | Fires when editing ends — whether saved or cancelled |
