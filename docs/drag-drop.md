@@ -77,7 +77,7 @@ Drag and drop is configured through the `dnd` key of the tree `options` prop.
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `dnd.enabled` | `boolean` | `false` | Enable drag and drop |
-| `dnd.onDrop` | `(target: Node, dragged: Node, placement: DropPlacement) => boolean` | — | Called when a node is dropped; return `false` to prevent the move |
+| `dnd.onDrop` | \`(targetNode: Node, draggedNode: Node, placement: DropPlacement) => boolean\` | — | Called when a node is dropped; return `false` to prevent the move |
 | `dnd.onDragStart` | `(node: Node, event: DragEvent) => boolean` | — | Called when a drag begins; return `false` to prevent dragging |
 | `dnd.onDragEnd` | `(node: Node, event: DragEvent) => void` | — | Called when a drag ends, whether dropped or cancelled |
 
