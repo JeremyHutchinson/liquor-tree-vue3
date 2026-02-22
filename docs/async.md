@@ -1,6 +1,6 @@
 # Async Data Loading
 
-Mark nodes with `isBatch: true` to indicate they should load children on demand when expanded. Provide a `fetchData` function in options that receives the node and returns `Promise<TreeNodeData[]>`. A loading spinner appears automatically while fetching; once loaded, children are cached and `fetchData` is not called again on subsequent expands.
+Mark nodes with `isBatch: true` to indicate they should load children on demand when expanded. Provide a `fetchData` function in options that receives the node and returns `Promise<TreeNodeData[]>`. A loading spinner appears automatically while fetching; once children are returned, they are cached and `fetchData` is not called again on subsequent expands.
 
 ## Basic Usage
 
@@ -58,7 +58,7 @@ const options: TreeOptions = {
 
 ## How It Works
 
-A node with `isBatch: true` renders an expand arrow even when it has no children, signalling that children will be loaded on demand. When the user expands such a node, the tree calls `fetchData(node)` with the `Node` object, and a loading spinner is displayed while the promise is pending. The resolved `TreeNodeData[]` array is appended as the node's children and the node's `isBatch` flag is cleared. On subsequent expands the existing children are shown immediately — `fetchData` is never called again for that node. If `fetchData` throws or the returned promise rejects, the `onFetchError` callback is invoked with the error and the node so the application can surface an appropriate message.
+A node with `isBatch: true` renders an expand arrow even when it has no children, signalling that children will be loaded on demand. When the user expands such a node, the tree calls `fetchData(node)` with the `Node` object, and a loading spinner is displayed while the promise is pending. The resolved `TreeNodeData[]` array is appended as the node's children and the node's `isBatch` flag is cleared. On subsequent expands the existing children are shown immediately — `fetchData` is never called again for that node, provided at least one child was returned. If `fetchData` returns an empty array, the node retains its `isBatch` flag and `fetchData` will be called again the next time the user expands it. If `fetchData` throws or the returned promise rejects, the `onFetchError` callback is invoked with the error and the node so the application can surface an appropriate message.
 
 ## Options
 
