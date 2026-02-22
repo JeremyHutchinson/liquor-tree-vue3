@@ -433,7 +433,7 @@ export class Node {
       node.parent = this.parent
     }
 
-    this.$emit('node:inserted:before', node)
+    this.$emit('inserted:before', node)
   }
 
   /**
@@ -455,6 +455,6 @@ export class Node {
       node.parent = this.parent
     }
 
-    this.$emit('node:inserted:after', node)
+    this.$emit('inserted:after', node)
   }
 }

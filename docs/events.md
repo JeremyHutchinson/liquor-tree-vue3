@@ -77,6 +77,8 @@ onMounted(() => {
 |-------|---------|-------------|
 | `node:removed` | `node: Node` | Fired after a node is removed from the tree. |
 | `node:child:added` | `parentNode: Node, childNode: Node` | Fired on the parent node after a child is appended via `node.append()`. |
+| `node:inserted:before` | `parentNode: Node, insertedNode: Node` | Fires when a node is inserted before another node |
+| `node:inserted:after` | `parentNode: Node, insertedNode: Node` | Fires when a node is inserted after another node |
 
 ### Drag-and-Drop Events
 
