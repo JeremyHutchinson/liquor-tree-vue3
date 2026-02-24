@@ -66,26 +66,38 @@ const dragDrop = useDragDrop(tree, rootEl)
 // Provide dragDrop to child components
 provide('dragDrop', dragDrop)
 
-// Async data loader (will be initialized in onMounted after tree is created)
+// Async data loader (will be initialized after tree is created)
 let asyncData: ReturnType<typeof useAsyncData> | null = null
 
-// Initialize tree
-onMounted(() => {
-  tree.value = new Tree(props.options)
+// Stored handler reference so it can be removed with $off
+let nodeExpandedHandler: ((node: Node) => Promise<void>) | null = null
 
-  if (props.data && props.data.length > 0) {
-    tree.value.setModel(props.data)
+function teardownTree(): void {
+  if (tree.value && nodeExpandedHandler) {
+    tree.value.$off('node:expanded', nodeExpandedHandler)
+    nodeExpandedHandler = null
+  }
+}
+
+function initTree(options: TreeOptions, data: TreeNodeData[]): void {
+  teardownTree()
+
+  tree.value = new Tree(options)
+
+  if (data && data.length > 0) {
+    tree.value.setModel(data)
   }
 
   // Initialize async data loading
-  asyncData = useAsyncData(tree.value, props.options)
+  asyncData = useAsyncData(tree.value, options)
 
-  // Listen for node expansion events to trigger async loading
-  tree.value.$on('node:expanded', async (node: Node) => {
+  // Store handler reference so it can be removed on teardown
+  nodeExpandedHandler = async (node: Node) => {
     if (node.isBatch && asyncData) {
       await asyncData.loadChildren(node)
     }
-  })
+  }
+  tree.value.$on('node:expanded', nodeExpandedHandler)
 
   // Sync tree.activeElement with reactive ref
   // Override the activeElement setter to trigger reactivity
@@ -101,6 +113,10 @@ onMounted(() => {
     enumerable: true,
     configurable: true
   })
+}
+
+onMounted(() => {
+  initTree(props.options, props.data)
 })
 
 // Watch for data changes
@@ -110,18 +126,16 @@ watch(() => props.data, (newData) => {
   }
 }, { deep: true })
 
-// Watch for options changes
+// Watch for options changes - re-initialize all tree wiring
 watch(() => props.options, (newOptions) => {
   if (newOptions) {
-    tree.value = new Tree(newOptions)
-    if (props.data) {
-      tree.value.setModel(props.data)
-    }
+    initTree(newOptions, props.data)
   }
 }, { deep: true })
 
 // Cleanup on unmount
 onUnmounted(() => {
+  teardownTree()
   dragDrop.cleanup()
 })
 

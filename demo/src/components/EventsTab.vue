@@ -44,7 +44,7 @@
       </ul>
       <p style="margin-top: 1rem;">
         See <a
-          href="https://github.com/your-repo/liquor-tree-vue3/blob/main/EVENTS.md"
+          href="https://github.com/JeremyHutchinson/liquor-tree-vue3/blob/master/docs/events.md"
           target="_blank"
         >EVENTS.md</a> for full documentation.
       </p>

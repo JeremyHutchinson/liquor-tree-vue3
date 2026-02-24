@@ -92,10 +92,10 @@ export function useAsyncData(tree: Tree, options: TreeOptions) {
           const childNode = new Node(tree, childData)
           node.append(childNode)
         })
-      }
 
-      // Mark node as no longer needing batch loading
-      node.isBatch = false
+        // Only clear isBatch when children are returned so empty responses allow retry
+        node.isBatch = false
+      }
     } catch (error) {
       // Call error handler if configured
       if (options.onFetchError) {

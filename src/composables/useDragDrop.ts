@@ -173,17 +173,27 @@ export function useDragDrop(tree: Ref<Tree | null>, rootElement: Ref<HTMLElement
    * Handle mouse up - finish dragging
    */
   function onMouseUp(event: MouseEvent): void {
+    const dndOptions = tree.value?.options.dnd
+    const nodeThatWasDragged = draggingNode.value
+
+    // Clear all drop position classes from root regardless of where mouse was released
+    if (rootElement.value) {
+      clearDropClasses(rootElement.value)
+    }
+
     // If drag was started
-    if (draggingNode.value && dropDestination.value && currentDropPosition.value) {
-      const targetElement = getSelectedNode(event)
-      if (targetElement) {
-        updateHelperClasses(targetElement, undefined)
+    if (draggingNode.value) {
+      if (dropDestination.value && currentDropPosition.value) {
+        // Perform the drop
+        performDrop(draggingNode.value, dropDestination.value, currentDropPosition.value)
       }
 
-      // Perform the drop
-      performDrop(draggingNode.value, dropDestination.value, currentDropPosition.value)
-
       draggingNode.value.state('dragging', false)
+    }
+
+    // Call onDragEnd callback if provided (fires for both successful drops and cancels)
+    if (nodeThatWasDragged && dndOptions && typeof dndOptions !== 'boolean' && dndOptions.onDragEnd) {
+      dndOptions.onDragEnd(nodeThatWasDragged, event as unknown as DragEvent)
     }
 
     // Reset state
@@ -287,6 +297,9 @@ export function useDragDrop(tree: Ref<Tree | null>, rootElement: Ref<HTMLElement
     // Check if drag is enabled
     const dndOptions = tree.value?.options.dnd
     if (!dndOptions) {
+      return
+    }
+    if (typeof dndOptions !== 'boolean' && dndOptions.enabled === false) {
       return
     }
 

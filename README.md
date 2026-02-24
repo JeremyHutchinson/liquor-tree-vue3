@@ -51,7 +51,7 @@ Run the interactive demo locally:
 git clone <repo-url>
 cd liquor-tree-vue3
 npm install
-npm run dev  # opens at http://localhost:8081
+npm run dev  # opens at http://localhost:5173
 ```
 
 ## Usage

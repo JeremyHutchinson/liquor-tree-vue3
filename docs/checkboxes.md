@@ -85,22 +85,28 @@ const options: TreeOptions = {
   autoCheckChildren: true
 }
 
+const handleNodeChecked = (node: Node) => {
+  console.log('Checked:', node.text)
+}
+
+const handleNodeUnchecked = (node: Node) => {
+  console.log('Unchecked:', node.text)
+}
+
 onMounted(() => {
   const tree = treeRef.value?.tree
   if (!tree) return
 
-  tree.$on('node:checked', (node: Node) => {
-    console.log('Checked:', node.text)
-  })
-
-  tree.$on('node:unchecked', (node: Node) => {
-    console.log('Unchecked:', node.text)
-  })
+  tree.$on('node:checked', handleNodeChecked)
+  tree.$on('node:unchecked', handleNodeUnchecked)
 })
 
 onUnmounted(() => {
-  treeRef.value?.tree?.$off('node:checked')
-  treeRef.value?.tree?.$off('node:unchecked')
+  const tree = treeRef.value?.tree
+  if (!tree) return
+
+  tree.$off('node:checked', handleNodeChecked)
+  tree.$off('node:unchecked', handleNodeUnchecked)
 })
 </script>
 

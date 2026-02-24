@@ -60,7 +60,7 @@ export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: Ref<HTMLElem
    * Handle right arrow key - expand or go to first child
    */
   function rightArrow(node: Node): void {
-    if (node.collapsed() && node.children.length > 0) {
+    if (node.collapsed() && (node.hasChildren() || node.isBatch)) {
       node.expand()
     } else if (node.expanded()) {
       const first = node.first()
@@ -90,6 +90,11 @@ export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: Ref<HTMLElem
    * Handle keyboard events
    */
   function handleKeyDown(event: KeyboardEvent): void {
+    // Respect keyboardNavigation: false option
+    if (tree.value?.options.keyboardNavigation === false) {
+      return
+    }
+
     const node = tree.value?.activeElement
 
     if (!node || !tree.value?.isNode(node)) {
@@ -106,34 +111,42 @@ export function useKeyboardNav(tree: Ref<Tree | null>, rootElement: Ref<HTMLElem
       return
     }
 
-    // Handle navigation and action keys
-    const handledKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'F2']
-
-    if (handledKeys.includes(event.key)) {
-      event.preventDefault()
-      event.stopPropagation()
-
-      switch (event.key) {
-        case 'ArrowUp':
-          focusUp(node)
-          break
-        case 'ArrowDown':
-          focusDown(node)
-          break
-        case 'ArrowLeft':
-          leftArrow(node)
-          break
-        case 'ArrowRight':
-          rightArrow(node)
-          break
-        case ' ':
-        case 'Enter':
+    switch (event.key) {
+      case 'ArrowUp':
+        event.preventDefault()
+        event.stopPropagation()
+        focusUp(node)
+        break
+      case 'ArrowDown':
+        event.preventDefault()
+        event.stopPropagation()
+        focusDown(node)
+        break
+      case 'ArrowLeft':
+        event.preventDefault()
+        event.stopPropagation()
+        leftArrow(node)
+        break
+      case 'ArrowRight':
+        event.preventDefault()
+        event.stopPropagation()
+        rightArrow(node)
+        break
+      case ' ':
+      case 'Enter':
+        if (tree.value?.options.checkbox) {
+          event.preventDefault()
+          event.stopPropagation()
           checkNode(node)
-          break
-        case 'F2':
+        }
+        break
+      case 'F2':
+        if (tree.value?.options.editing !== false) {
+          event.preventDefault()
+          event.stopPropagation()
           node.startEditing()
-          break
-      }
+        }
+        break
     }
   }
 
