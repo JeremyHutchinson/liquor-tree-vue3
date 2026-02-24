@@ -2,8 +2,6 @@
 
 A Vue tree component that allows you to present hierarchically organized data in a nice and logical manner.
 
-[documentation](https://amsik.github.io/liquor-tree/) | [demos](https://amsik.github.io/liquor-tree/#Examples)
-
 ## Features
 * drag&drop
 * mobile friendly
@@ -29,64 +27,65 @@ $ npm install liquor-tree
 $ yarn add liquor-tree
 ```
 
-## Live Playground
+## Documentation
 
-To run that demo on your own computer:
+Full feature documentation lives in the [`docs/`](./docs/README.md) folder:
 
-* Clone this repository
-* `npm install`
-* `npm run build` 
-* `npm run storybook` 
-* Visit `http://localhost:9001/`
+- [Basic Tree](./docs/basic.md)
+- [Selection](./docs/selection.md)
+- [Checkboxes](./docs/checkboxes.md)
+- [Filter & Search](./docs/filter.md)
+- [Sorting](./docs/sorting.md)
+- [Keyboard Navigation](./docs/keyboard.md)
+- [Inline Editing](./docs/editing.md)
+- [Drag & Drop](./docs/drag-drop.md)
+- [Async Data](./docs/async.md)
+- [Custom Rendering](./docs/custom-rendering.md)
+- [Events](./docs/events.md)
 
-There are a lot of examples for you. All sources of stories are located in `liquor-tree/docs/storybook/stories`.
+## Live Demo
+
+Run the interactive demo locally:
+
+```bash
+git clone <repo-url>
+cd liquor-tree-vue3
+npm install
+npm run dev  # opens at http://localhost:5173
+```
 
 ## Usage
 
-```html
-  <!-- Vue Component -->
-  <template>
-    <tree
-        :data="items"
-        :options="options"
-        ref="tree"
-    />
-  </template>
+```vue
+<template>
+  <LiquorTree :data="items" :options="options" />
+</template>
 
-  <script>
-    import Vue from 'Vue'
-    import LiquorTree from 'liquor-tree'
+<script setup lang="ts">
+import { LiquorTree } from 'liquor-tree'
+import type { TreeNodeData, TreeOptions } from 'liquor-tree'
 
-    Vue.use(LiquorTree)
+const items: TreeNodeData[] = [
+  { text: 'Item 1' },
+  { text: 'Item 2' },
+  { text: 'Item 3', children: [
+    { text: 'Item 3.1' },
+    { text: 'Item 3.2' }
+  ]}
+]
 
-    export default {
-      ...
-      data() {
-        return {
-          items: [
-            {text: 'Item 1'},
-            {text: 'Item 2'},
-            {text: 'Item 3', children: [
-              {text: 'Item 3.1'},
-              {text: 'Item 3.2'}
-            ]}
-          ],
-          options: {
-            checkbox: true
-          }
-        }
-      }
-      ...
-    }
-  </script>
+const options: TreeOptions = {
+  checkbox: true
+}
+</script>
 ```
 
 ## Development
 
 Check out the `package.json`s script section. There are 2 scripts:
 
-- `npm run dev` - it will open browser and you can *play* with code
-- `npm run build` - it will craete a module file in `production` mode 
+- `npm run dev` - opens the interactive demo in the browser at http://localhost:8081
+- `npm run build` - creates a module file in `production` mode
 
 
 ## License

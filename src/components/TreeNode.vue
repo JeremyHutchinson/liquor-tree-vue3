@@ -1,458 +1,424 @@
 <template>
   <li
-    role="treeitem"
+    v-if="isVisible"
     class="tree-node"
-    :data-id="node.id"
-    :class="nodeClass"
-    @mousedown.stop="handleMouseDown"
+    :data-id="node?.id"
+    role="treeitem"
+    :aria-level="ariaLevel"
+    :aria-expanded="ariaExpanded"
+    :aria-selected="node?.selected()"
+    :aria-disabled="node?.disabled() || undefined"
+    :aria-checked="ariaChecked"
   >
     <div
       class="tree-content"
-      :style="[options.direction == 'ltr' ? {'padding-left': padding} : {'padding-right': padding}]"
-      @click.stop="select"
+      :class="{
+        'tree-content-selected': node?.selected(),
+        'tree-content-focused': isActiveElement
+      }"
+      @click="handleClick"
+      @dblclick="handleDblClick"
+      @mousedown="handleMouseDown"
     >
-      <i
-        class="tree-arrow"
-        :class="[{'expanded': node.states.expanded, 'has-child': node.children.length || node.isBatch}, options.direction]"
-        @click.stop="toggleExpand"
-      />
-
-      <i
-        v-if="options.checkbox"
-        class="tree-checkbox"
-        :class="{'checked': node.states.checked, 'indeterminate': node.states.indeterminate}"
-        @click.stop="check"
-      />
-
+      <!-- Checkbox (if enabled) -->
       <span
-        ref="anchor"
-        class="tree-anchor"
-        tabindex="-1"
-        @focus="onNodeFocus"
-        @dblclick="tree.$emit('node:dblclick', node)"
+        v-if="showCheckbox"
+        class="tree-checkbox"
+        :class="{
+          'tree-checkbox-checked': node?.checked(),
+          'tree-checkbox-indeterminate': node?.indeterminate()
+        }"
+        @click.stop="toggleCheckbox"
       >
-        <node-content :node="node" />
+        <span class="checkbox-icon">
+          <span
+            v-if="node?.indeterminate()"
+            class="checkbox-indeterminate-icon"
+          >−</span>
+          <span
+            v-else-if="node?.checked()"
+            class="checkbox-check-icon"
+          >✓</span>
+        </span>
+      </span>
+
+      <!-- Expand/collapse toggle or loading spinner -->
+      <span
+        v-if="node?.state('loading')"
+        class="tree-loading"
+        title="Loading..."
+      >
+        ⏳
+      </span>
+      <span
+        v-else-if="node?.hasChildren() || node?.isBatch"
+        class="tree-arrow"
+        :class="{ 'tree-arrow-expanded': node?.expanded() }"
+        @click.stop="toggleExpand"
+      >
+        ▶
+      </span>
+      <span
+        v-else
+        class="tree-arrow-placeholder"
+      />
+
+      <!-- Inline editor when editing, otherwise slot/text -->
+      <input
+        v-if="node?.isEditing"
+        ref="editInputRef"
+        class="tree-edit-input"
+        :value="node?.text"
+        @keydown.enter.stop="commitEdit"
+        @keydown.escape.stop="cancelEdit"
+        @blur="commitEdit"
+        @click.stop
+        @mousedown.stop
+      >
+      <span
+        v-else
+        class="tree-text"
+      >
+        <slot :node="node">
+          {{ node?.text || 'N/A' }}
+        </slot>
       </span>
     </div>
 
-    <transition name="l-fade">
-      <ul
-        v-if="hasChildren() && node.states.expanded"
-        class="tree-children"
+    <!-- Recursively render children (only when expanded) -->
+    <ul
+      v-if="node?.hasChildren?.() && node?.expanded()"
+      class="tree-children"
+      role="group"
+    >
+      <TreeNode
+        v-for="child in node.children"
+        :key="child.id"
+        :node="child"
       >
-        <node
-          v-for="child in visibleChildren"
-          :key="child.id"
-          :node="child"
-          :options="options"
-        />
-      </ul>
-    </transition>
+        <!-- Forward the slot to children recursively -->
+        <template
+          v-if="$slots.default"
+          #default="slotProps"
+        >
+          <slot v-bind="slotProps" />
+        </template>
+      </TreeNode>
+    </ul>
   </li>
 </template>
 
-<script>
-  import NodeContent from './NodeContent.vue'
+<script setup lang="ts">
+import { computed, inject, ref, watch, nextTick, type Ref } from 'vue'
+import type { Node } from '@/core/Node'
 
-  const TreeNode = {
-    name: 'Node',
-    inject: ['tree'],
-    props: ['node', 'options'],
+interface Props {
+  node: Node
+}
 
-    components: {
-      NodeContent
-    },
+const props = defineProps<Props>()
 
-    watch: {
-      node() {
-        this.node.vm = this
-      }
-    },
+defineSlots<{
+  default?: (props: { node: Node }) => unknown
+}>()
 
-    data() {
-      this.node.vm = this
+// Inject the reactive activeElement from TreeRoot
+const activeElement = inject<Ref<Node | null>>('activeElement')
 
-      return {
-        loading: false
-      }
-    },
+// Inject dragDrop from TreeRoot
+const dragDrop = inject<ReturnType<typeof import('@/composables').useDragDrop>>('dragDrop')
 
-    computed: {
-      padding() {
-        return this.node.depth * (this.options.paddingLeft ? this.options.paddingLeft : this.options.nodeIndent) + 'px'
-      },
+const isActiveElement = computed(() => {
+  return activeElement?.value === props.node
+})
 
-      nodeClass() {
-        let state = this.node.states
-        let hasChildren = this.hasChildren()
-        let classes = {
-          'has-child': hasChildren,
-          'expanded': hasChildren && state.expanded,
-          'selected': state.selected,
-          'disabled': state.disabled,
-          'matched': state.matched,
-          'dragging': state.dragging,
-          'loading': this.loading,
-          'draggable': state.draggable
-        }
+const ariaLevel = computed(() => (props.node?.depth ?? 0) + 1)
 
-        if (this.options.checkbox) {
-          classes['checked'] = state.checked
-          classes['indeterminate'] = state.indeterminate
-        }
+const ariaExpanded = computed(() => {
+  if (!props.node?.hasChildren() && !props.node?.isBatch) return undefined
+  return props.node?.expanded()
+})
 
-        return classes
-      },
+const ariaChecked = computed(() => {
+  if (!props.node?.tree?.options.checkbox) return undefined
+  if (props.node?.indeterminate()) return 'mixed'
+  return props.node?.checked()
+})
 
-      visibleChildren() {
-        return this.node.children.filter(function(child) {
-          return child && child.visible()
-        })
-      }
-    },
+const isVisible = computed(() => {
+  // Check if node has a visible state set to false
+  const visibleState = props.node?.state('visible')
+  // If visible state is explicitly set to false, hide the node
+  if (visibleState === false) {
+    return false
+  }
+  // Otherwise, show the node (default is visible)
+  return true
+})
 
-    methods: {
-      onNodeFocus() {
-        this.tree.activeElement = this.node
-      },
+const showCheckbox = computed(() => {
+  return props.node?.tree?.options.checkbox === true
+})
 
-      focus() {
-        this.$refs.anchor.focus()
-        this.node.select()
-      },
+const toggleExpand = () => {
+  props.node?.toggleExpand()
+}
 
-      check() {
-        if (this.node.checked()) {
-          this.node.uncheck()
-        } else {
-          this.node.check()
-        }
-      },
+const toggleCheckbox = () => {
+  if (props.node?.checked()) {
+    props.node?.uncheck()
+  } else {
+    props.node?.check()
+  }
+}
 
-      select({ctrlKey} = evnt) {
-        const opts = this.options
-        const tree = this.tree
-        const node = this.node
+const handleClick = (event: MouseEvent) => {
+  if (!props.node) return
 
-        tree.$emit('node:clicked', node)
+  if (event.shiftKey && props.node.tree?.options.multiple) {
+    // Shift+click: range selection
+    props.node.tree.selectRange(props.node)
+  } else {
+    // Normal click or Cmd/Ctrl+click for multi-select
+    const extendSelection = event.metaKey || event.ctrlKey
+    props.node.select(extendSelection)
+  }
+  // Set as active element for keyboard navigation
+  props.node.focus()
+}
 
-        if (opts.editing && node.isEditing) {
-          return
-        }
+const handleMouseDown = (event: MouseEvent) => {
+  // Start dragging if drag & drop is enabled
+  if (dragDrop && props.node) {
+    dragDrop.startDragging(props.node, event)
+  }
+}
 
-        if (opts.editing && node.editable()) {
-          return this.startEditing()
-        }
+const handleDblClick = () => {
+  props.node?.startEditing()
+}
 
-        if (opts.checkbox && opts.checkOnSelect) {
-          if (!opts.parentSelect && this.hasChildren()) {
-            return this.toggleExpand()
-          }
+// Ref for the inline edit input
+const editInputRef = ref<HTMLInputElement | null>(null)
 
-          return this.check(ctrlKey)
-        }
+// Captured tree root element — used to restore focus when editing ends
+let capturedTreeRoot: HTMLElement | null = null
 
-        // 'parentSelect' behaviour.
-        // For nodes which has a children list we have to expand/collapse
-        if (!opts.parentSelect && this.hasChildren()) {
-          this.toggleExpand()
-        }
-
-        if (opts.multiple) {
-          if (!node.selected()) {
-            node.select(ctrlKey)
-          } else {
-            if (ctrlKey) {
-              node.unselect()
-            } else {
-              if (this.tree.selectedNodes.length != 1) {
-                tree.unselectAll()
-                node.select()
-              }
-            }
-          }
-        } else {
-          if (node.selected() && ctrlKey) {
-            node.unselect()
-          } else {
-            node.select()
-          }
-        }
-      },
-
-      toggleExpand() {
-        if (this.hasChildren()) {
-          this.node.toggleExpand()
-        }
-      },
-
-      hasChildren() {
-        return this.node.hasChildren()
-      },
-
-      startEditing() {
-        if (this.tree._editingNode) {
-          this.tree._editingNode.stopEditing()
-        }
-
-        this.node.startEditing()
-      },
-
-      stopEditing() {
-        this.node.stopEditing()
-      },
-
-      handleMouseDown(event) {
-        if (!this.options.dnd) {
-          return
-        }
-
-        this.tree.vm.startDragging(this.node, event)
-      }
+// Auto-focus the input when editing begins; restore tree focus when it ends
+watch(
+  () => props.node?.isEditing,
+  (editing) => {
+    if (editing) {
+      nextTick(() => {
+        // Capture the .liquor-tree root now, while the input is still in the DOM
+        capturedTreeRoot = editInputRef.value?.closest('.liquor-tree') as HTMLElement | null
+        editInputRef.value?.focus()
+        editInputRef.value?.select()
+      })
+    } else {
+      // Return focus to the tree container so keyboard nav keeps working.
+      // This runs whether editing ended via Enter, Escape, or blur.
+      nextTick(() => capturedTreeRoot?.focus())
     }
   }
+)
 
-  export default TreeNode
+const commitEdit = () => {
+  if (props.node?.isEditing) {
+    props.node.stopEditing(true, editInputRef.value?.value)
+  }
+}
+
+const cancelEdit = () => {
+  props.node?.stopEditing(false)
+}
 </script>
 
-<style>
-  .tree-node {
-    white-space: nowrap;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-sizing: border-box;
-  }
+<style scoped>
+.tree-node {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
 
-  .tree-content {
-    display: flex;
-    align-items: center;
-    padding: 3px;
-    cursor: pointer;
-    width: 100%;
-    box-sizing: border-box;
-  }
+.tree-content {
+  padding: 4px 8px;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
 
-  .tree-node:not(.selected) > .tree-content:hover {
-    background: #f6f8fb;
-  }
+.tree-content:hover {
+  background-color: #f5f5f5;
+}
 
-  .tree-node.selected > .tree-content {
-    background-color: #e7eef7;
-  }
+.tree-content-selected {
+  background-color: #e3f2fd;
+  border-left: 3px solid #2196f3;
+  padding-left: 5px;
+}
 
-  .tree-node.disabled > .tree-content:hover {
-    background: inherit;
-  }
+.tree-content-selected:hover {
+  background-color: #bbdefb;
+}
 
-  .tree-arrow {
-    flex-shrink: 0;
-    height: 30px;
-    cursor: pointer;
-    margin-left: 30px;
-    width: 0;
-  }
+.tree-content-focused {
+  outline: 2px solid #2196f3;
+  outline-offset: -2px;
+}
 
-  .tree-arrow.has-child {
-    margin-left: 0;
-    width: 30px;
-    position: relative;
-  }
+.tree-arrow {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+  color: #666;
+}
 
-  .tree-arrow.has-child:after {
-    border: 1.5px solid #494646;
-    position: absolute;
-    border-left: 0;
-    border-top: 0;
-    left: 9px;
-    top: 50%;
-    height: 9px;
-    width: 9px;
-    transform: rotate(-45deg) translateY(-50%) translateX(0);
-    transition: transform .25s;
-    transform-origin: center;
-  }
+.tree-arrow:hover {
+  color: #333;
+}
 
-  .tree-arrow.has-child.rtl:after {
-    border: 1.5px solid #494646;
-    position: absolute;
-    border-right: 0;
-    border-bottom: 0;
-    right: 0px;
-    top: 50%;
-    height: 9px;
-    width: 9px;
-    transform: rotate(-45deg) translateY(-50%) translateX(0);
-    transition: transform .25s;
-    transform-origin: center;
-  }
+.tree-arrow-expanded {
+  transform: rotate(90deg);
+}
 
-  .tree-arrow.expanded.has-child:after {
-    transform: rotate(45deg) translateY(-50%) translateX(-5px);
-  }
+.tree-arrow-placeholder {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
 
-  .tree-checkbox {
-    flex-shrink: 0;
-    position: relative;
-    width: 30px;
-    height: 30px;
-    box-sizing: border-box;
-    border: 1px solid #dadada;
-    border-radius: 2px;
-    background: #fff;
-    transition: border-color .25s, background-color .25s;
-  }
+.tree-loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  font-size: 16px;
+  line-height: 16px;
+  text-align: center;
+  animation: pulse 1.5s ease-in-out infinite;
+}
 
-  .tree-checkbox:after,
-  .tree-arrow:after {
-    position: absolute;
-    display: block;
-    content: "";
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
   }
+  50% {
+    opacity: 0.5;
+  }
+}
 
-  .tree-checkbox.checked,
-  .tree-checkbox.indeterminate {
-    background-color: #3a99fc;
-    border-color: #218eff;
-  }
+.tree-text {
+  font-size: 14px;
+  color: #333;  /* Ensure dark text color regardless of color scheme */
+}
 
-  .tree-checkbox.checked:after {
-    box-sizing: content-box;
-    border: 1.5px solid #fff; /* probably width would be rounded in most cases */
-    border-left: 0;
-    border-top: 0;
-    left: 9px;
-    top: 3px;
-    height: 15px;
-    width: 8px;
-    transform: rotate(45deg) scaleY(0);
-    transition: transform .25s;
-    transform-origin: center;
-  }
+.tree-checkbox {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+  cursor: pointer;
+  border: 2px solid #666;
+  border-radius: 3px;
+  background-color: #fff;
+  transition: all 0.2s ease;
+  position: relative;
+}
 
-  .tree-checkbox.checked:after {
-    transform: rotate(45deg) scaleY(1);
-  }
+.tree-checkbox:hover {
+  border-color: #2196f3;
+}
 
-  .tree-checkbox.indeterminate:after {
-    background-color: #fff;
-    top: 50%;
-    left: 20%;
-    right: 20%;
-    height: 2px;
-  }
+.tree-checkbox-checked {
+  background-color: #2196f3;
+  border-color: #2196f3;
+}
 
-  .tree-anchor {
-    flex-grow: 2;
-    outline: none;
-    display: flex;
-    text-decoration: none;
-    color: #343434;
-    vertical-align: top;
-    margin-left: 3px;
-    line-height: 24px;
-    padding: 3px 6px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
+.tree-checkbox-indeterminate {
+  background-color: #2196f3;
+  border-color: #2196f3;
+}
 
-  .tree-node.selected > .tree-content > .tree-anchor {
-    outline: none;
-  }
+.checkbox-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+}
 
-  .tree-node.disabled > .tree-content > .tree-anchor {
-    color: #989191;
-    background: #fff;
-    opacity: .6;
-    cursor: default;
-    outline: none;
-  }
+.checkbox-check-icon {
+  display: block;
+}
 
-  .tree-input {
-    display: block;
-    width: 100%;
-    height: 24px;
-    line-height: 24px;
-    outline: none;
-    border: 1px solid #3498db;
-    padding: 0 4px;
-  }
+.checkbox-indeterminate-icon {
+  display: block;
+  font-size: 16px;
+  line-height: 12px;
+}
 
-  .l-fade-enter-active, .l-fade-leave-active {
-    transition: opacity .3s, transform .3s;
-    transform: translateX(0);
-  }
+.tree-edit-input {
+  flex: 1;
+  padding: 1px 4px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid #2196f3;
+  border-radius: 3px;
+  outline: none;
+  background: white;
+  color: #333;
+  min-width: 0;
+}
 
-  .l-fade-enter, .l-fade-leave-to {
-    opacity: 0;
-    transform: translateX(-2em);
-  }
+.tree-children {
+  list-style: none;
+  margin: 0;
+  padding-left: 20px;
+}
 
+/* Drag & Drop styles */
+.tree-node.drag-above > .tree-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #2196f3;
+}
 
-  .tree--small .tree-anchor {
-    line-height: 19px;
-  }
+.tree-node.drag-below > .tree-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #2196f3;
+}
 
-  .tree--small .tree-checkbox {
-    width: 23px;
-    height: 23px;
-  }
+.tree-node.drag-on > .tree-content {
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+  border-radius: 3px;
+}
 
-  .tree--small .tree-arrow {
-    height: 23px;
-  }
-
-  .tree--small .tree-checkbox.checked:after {
-    left: 7px;
-    top: 3px;
-    height: 11px;
-    width: 5px;
-  }
-
-  .tree-node.has-child.loading > .tree-content > .tree-arrow,
-  .tree-node.has-child.loading > .tree-content > .tree-arrow:after {
-    border-radius: 50%;
-    width: 15px;
-    height: 15px;
-    border: 0;
-  }
-
-  .tree-node.has-child.loading > .tree-content > .tree-arrow {
-    font-size: 3px;
-    position: relative;
-    border-top: 1.1em solid rgba(45,45,45, 0.2);
-    border-right: 1.1em solid rgba(45,45,45, 0.2);
-    border-bottom: 1.1em solid rgba(45,45,45, 0.2);
-    border-left: 1.1em solid #2d2d2d;
-    -webkit-transform: translateZ(0);
-    -ms-transform: translateZ(0);
-    transform: translateZ(0);
-    left: 5px;
-    -webkit-animation: loading 1.1s infinite linear;
-    animation: loading 1.1s infinite linear;
-    margin-right: 8px;
-  }
-
-  @-webkit-keyframes loading {
-    0% {
-      -webkit-transform: rotate(0deg);
-      transform: rotate(0deg);
-    }
-    100% {
-      -webkit-transform: rotate(360deg);
-      transform: rotate(360deg);
-    }
-  }
-  @keyframes loading {
-    0% {
-      -webkit-transform: rotate(0deg);
-      transform: rotate(0deg);
-    }
-    100% {
-      -webkit-transform: rotate(360deg);
-      transform: rotate(360deg);
-    }
-  }
+.tree-content {
+  position: relative;
+}
 </style>
