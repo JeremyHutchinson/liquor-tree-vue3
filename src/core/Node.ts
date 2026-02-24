@@ -37,7 +37,7 @@ export class Node {
 
     // Store all data including text and any additional properties
     // Extract known properties to exclude from data
-    const { id, state, children, isBatch, text, data, ...additionalProps } = item
+    const { id: _id, state: _state, children: _children, isBatch: _isBatch, text, data, ...additionalProps } = item
 
     this.data = {
       ...data,
@@ -142,10 +142,11 @@ export class Node {
     }
 
     const path: Node[] = [this]
-    let el: Node | null = this
+    let el: Node | null = this.parent
 
-    while ((el = el.parent) !== null) {
+    while (el !== null) {
       path.push(el)
+      el = el.parent
     }
 
     return path
